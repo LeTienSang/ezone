@@ -46,10 +46,10 @@
 
 ## 2. Phân tầng Backend (Spring Boot)
 
-### Cấu trúc thư mục `be/`
+### Cấu trúc thư mục `backend/`
 
 ```
-be/
+backend/
 └── src/main/java/com/ezone/
     ├── config/
     │   ├── SecurityConfig.java       ← Cấu hình Spring Security + JWT filter
@@ -89,10 +89,10 @@ HTTP Request
 
 ## 3. Phân tầng Frontend (ReactJS)
 
-### Cấu trúc thư mục `fe/`
+### Cấu trúc thư mục `frontend/`
 
 ```
-fe/
+frontend/
 └── src/
     ├── components/           ← UI components tái sử dụng
     │   ├── common/           ← Button, Input, Modal, Table, ...
