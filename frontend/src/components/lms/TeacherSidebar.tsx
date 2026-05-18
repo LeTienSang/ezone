@@ -29,6 +29,10 @@ export const TeacherSidebar: React.FC = () => {
               <CheckSquare size={20} />
               Chấm bài & Nhận xét
             </NavLink>
+            <NavLink to="/teacher/profile" className={({isActive}) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-white text-primary shadow-sm font-medium' : 'text-text-body hover:bg-white/50'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Hồ sơ cá nhân
+            </NavLink>
           </nav>
         </div>
       </div>

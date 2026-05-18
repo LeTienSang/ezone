@@ -208,3 +208,8 @@ export const dummySubmissions = [
   { id: 1, studentName: "Nguyễn Văn A", assignment: "Homework Unit 1", submittedAt: "22/05/2026", status: "Chưa chấm" },
   { id: 2, studentName: "Lê Thị C", assignment: "Placement Test", submittedAt: "15/05/2026", status: "Đã chấm", score: 8.5 }
 ];
+
+export const dummyPayments = [
+  { id: 1, student: "Nguyễn Văn A", course: "IELTS Intensive K45", amount: "4.500.000đ", date: "20/05/2026", status: "Chờ duyệt" },
+  { id: 2, student: "Lê Thị C", course: "Giao tiếp Tiếng Anh K12", amount: "3.200.000đ", date: "15/05/2026", status: "Đã duyệt" }
+];
