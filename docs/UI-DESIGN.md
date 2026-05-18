@@ -66,7 +66,7 @@
 ## V. PHÂN HỆ LMS - DÀNH CHO GIẢNG VIÊN (TEACHER)
 
 ### 7. Nhật ký lớp học & Quản lý Buổi học (UC14 - CLASS_LOG)
-- **Ảnh tham chiếu Figma:** ![Chi tiết lớp học](chưa_có_giao_diện)
+- **Ảnh tham chiếu Figma:** ![Chi tiết lớp học]
 - **Nghiệp vụ ezone:** Quản lý thông tin lớp (`CLASSES`) và hiển thị dòng lịch sử hoạt động, tài liệu đã giao thuộc lớp đó.
 - **Đặc tả Component:**
   - `SidebarLayout:` Menu quản lý lớp nền hồng nhạt `Accent`. 
@@ -74,12 +74,12 @@
   - `ActivityStream:` Dòng thời gian danh sách bài tập/tài liệu đã thêm vào lớp theo thứ tự ngày tháng giảm dần.
 
 ### 8. Ghi nhận Điểm danh (UC15 - ATTENDANCE MANAGE)
-- **Ảnh tham chiếu Figma:** ![Giao diện Điểm danh](chưa_có_giao_diện)
+- **Ảnh tham chiếu Figma:** ![Giao diện Điểm danh]
 - **Nghiệp vụ ezone:** Giảng viên tích chọn và cập nhật trạng thái chuyên cần trực tiếp vào bảng `ATTENDANCE`.
 - **Đặc tả Component:** Bảng (Table) danh sách học viên trong lớp, cột trạng thái sử dụng các nút Radio Button hoặc Checkbox: [Có mặt], [Muộn], [Vắng].
 
 ### 9. Chấm bài & Nhận xét (UC18 - GRADING)
-- **Ảnh tham chiếu Figma:** ![Giao diện Chấm bài](chưa_có_giao_diện)
+- **Ảnh tham chiếu Figma:** ![Giao diện Chấm bài]
 - **Nghiệp vụ ezone:** Đánh giá các tệp học viên nộp trong `SUBMISSIONS` và cập nhật điểm số vào hệ thống.
 - **Đặc tả Component:** Danh sách bài làm của học viên. Khi chọn một học viên sẽ mở ra form nhập Điểm số (Số thực) và ô TextBox nhập Nhận xét (Văn bản).
 
@@ -88,11 +88,11 @@
 ## VI. PHÂN HỆ QUẢN TRỊ (ADMIN DASHBOARD)
 
 ### 10. Quản lý Người dùng & Lớp học (UC19, UC21 - USERS & CLASSES)
-- **Ảnh tham chiếu Figma:** ![Quản trị Dashboard Admin](chưa_có_giao_diện)
+- **Ảnh tham chiếu Figma:** ![Quản trị Dashboard Admin]
 - **Nghiệp vụ ezone:** Thêm, sửa, khóa tài khoản `USERS`, phân quyền Role, và khởi tạo lớp mới `CLASSES` (chỉ định giảng viên).
 - **Đặc tả Component:** Bảng quản trị dữ liệu quy mô lớn (Data Table), có thanh tìm kiếm, bộ lọc theo Role/Trạng thái và các nút tác vụ (Thêm, Sửa, Khóa).
 
 ### 11. Phê duyệt & Đối soát Học phí (UC22, UC23 - PAYMENTS)
-- **Ảnh tham chiếu Figma:** ![Phê duyệt Học phí Admin](chưa_có_giao_diện)
+- **Ảnh tham chiếu Figma:** ![Phê duyệt Học phí Admin]
 - **Nghiệp vụ ezone:** Xem ảnh minh chứng/hóa đơn học viên gửi lên bảng `PAYMENTS`, Admin kiểm tra và nhấn nút Phê duyệt thủ công để thêm học viên vào `CLASS_MEMBERS`.
 - **Đặc tả Component:** Danh sách đơn hàng chờ duyệt, giao diện hiển thị popup ảnh hóa đơn lớn để đối soát trực quan, kèm 2 nút tác vụ: [Phê duyệt] (Màu xanh) và [Từ chối] (Màu đỏ).
