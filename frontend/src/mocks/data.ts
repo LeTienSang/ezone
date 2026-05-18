@@ -173,3 +173,38 @@ export const dummyAboutUs = {
     { title: "Tận tâm", description: "Luôn đồng hành và hỗ trợ học viên trên mọi bước đường." }
   ]
 };
+
+export const dummyTeacher = {
+  name: "Trần Văn B",
+  role: "Giảng viên",
+  avatar: "https://ui-avatars.com/api/?name=Tran+Van+B&background=CE1835&color=fff"
+};
+
+export const dummyAdmin = {
+  name: "Quản trị viên",
+  role: "Admin",
+  avatar: "https://ui-avatars.com/api/?name=Admin&background=111827&color=fff"
+};
+
+export const dummyAdminStats = {
+  totalUsers: 10500,
+  totalCourses: 52,
+  totalRevenue: "1.2B VNĐ",
+  activeClasses: 120
+};
+
+export const dummyUsersList = [
+  { id: 1, name: "Nguyễn Văn A", email: "a.nguyen@example.com", role: "Học viên", status: "Hoạt động", date: "20/05/2026" },
+  { id: 2, name: "Trần Văn B", email: "b.tran@example.com", role: "Giảng viên", status: "Hoạt động", date: "15/04/2026" },
+  { id: 3, name: "Lê Thị C", email: "c.le@example.com", role: "Học viên", status: "Khóa", date: "10/01/2026" }
+];
+
+export const dummyTeacherClasses = [
+  { id: 1, name: "IELTS Intensive K45", schedule: "T2, T4 (18:00 - 20:00)", students: 25, status: "Đang diễn ra" },
+  { id: 2, name: "Giao tiếp Tiếng Anh K12", schedule: "T3, T5 (19:30 - 21:00)", students: 15, status: "Sắp bắt đầu" }
+];
+
+export const dummySubmissions = [
+  { id: 1, studentName: "Nguyễn Văn A", assignment: "Homework Unit 1", submittedAt: "22/05/2026", status: "Chưa chấm" },
+  { id: 2, studentName: "Lê Thị C", assignment: "Placement Test", submittedAt: "15/05/2026", status: "Đã chấm", score: 8.5 }
+];

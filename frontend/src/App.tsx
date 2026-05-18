@@ -9,6 +9,12 @@ import { DashboardLayout } from './pages/student/DashboardLayout';
 import { TimetablePage } from './pages/student/TimetablePage';
 import { AssignmentsPage } from './pages/student/AssignmentsPage';
 import { ResultsPage } from './pages/student/ResultsPage';
+import { TeacherLayout } from './pages/teacher/TeacherLayout';
+import { TeacherClassesPage } from './pages/teacher/TeacherClassesPage';
+import { TeacherGradingPage } from './pages/teacher/TeacherGradingPage';
+import { AdminLayout } from './pages/admin/AdminLayout';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import './index.css';
 
 function App() {
@@ -28,6 +34,20 @@ function App() {
           <Route path="timetable" element={<TimetablePage />} />
           <Route path="assignments" element={<AssignmentsPage />} />
           <Route path="results" element={<ResultsPage />} />
+        </Route>
+
+        {/* Teacher Routes */}
+        <Route path="/teacher" element={<TeacherLayout />}>
+          <Route index element={<Navigate to="/teacher/classes" replace />} />
+          <Route path="classes" element={<TeacherClassesPage />} />
+          <Route path="grading" element={<TeacherGradingPage />} />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
