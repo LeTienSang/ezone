@@ -2,13 +2,7 @@
 
 ## Hướng dẫn cài đặt
 
-### 1. Yêu cầu hệ thống
-- Node.js (v18+)
-- Java JDK 17+
-- MySQL Server (v8.0+)
-- Maven
-
-### 2. Chạy Frontend (React)
+### 1. Chạy Frontend (React)
 
 ```bash
 cd frontend
