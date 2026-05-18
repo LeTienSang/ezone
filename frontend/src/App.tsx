@@ -15,6 +15,7 @@ import { StudentPaymentPage } from './pages/student/StudentPaymentPage';
 import { TeacherLayout } from './pages/teacher/TeacherLayout';
 import { TeacherClassesPage } from './pages/teacher/TeacherClassesPage';
 import { TeacherClassDetailPage } from './pages/teacher/TeacherClassDetailPage';
+import { TeacherMaterialsPage } from './pages/teacher/TeacherMaterialsPage';
 import { TeacherGradingPage } from './pages/teacher/TeacherGradingPage';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
@@ -52,6 +53,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="classes" element={<TeacherClassesPage />} />
           <Route path="classes/:id" element={<TeacherClassDetailPage />} />
+          <Route path="materials" element={<TeacherMaterialsPage />} />
           <Route path="grading" element={<TeacherGradingPage />} />
         </Route>
 

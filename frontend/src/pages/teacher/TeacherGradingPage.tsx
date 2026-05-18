@@ -7,7 +7,7 @@ export const TeacherGradingPage: React.FC = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-main">Chấm bài & Nhận xét</h1>
+        <h1 className="text-2xl font-bold text-text-main">Chấm & Nhận xét</h1>
         <p className="text-text-body">Quản lý bài nộp của học viên và đánh giá kết quả.</p>
       </div>
 
@@ -43,7 +43,7 @@ export const TeacherGradingPage: React.FC = () => {
                   <td className="p-4 font-medium text-text-main">{sub.studentName}</td>
                   <td className="p-4 text-text-body">{sub.assignment}</td>
                   <td className="p-4 text-text-body">
-                    <span className="flex items-center gap-1"><Clock size={14}/> {sub.submittedAt}</span>
+                    <span className="flex items-center gap-1"><Clock size={14} /> {sub.submittedAt}</span>
                   </td>
                   <td className="p-4 text-center">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${sub.status === 'Đã chấm' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>

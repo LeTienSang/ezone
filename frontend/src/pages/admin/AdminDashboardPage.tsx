@@ -1,66 +1,125 @@
 import React from 'react';
-import { Users, BookOpen, DollarSign, Activity } from 'lucide-react';
+import { Users, BookOpen, DollarSign, Activity, TrendingUp, TrendingDown, BarChart3, LineChart } from 'lucide-react';
 import { dummyAdminStats } from '../../mocks/data';
 
 export const AdminDashboardPage: React.FC = () => {
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Tổng quan hệ thống</h1>
-        <p className="text-gray-500">Thống kê hoạt động chung của nền tảng ezone.</p>
+    <div className="pb-10">
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Tổng quan hệ thống</h1>
+          <p className="text-gray-500 mt-1">Theo dõi các chỉ số quan trọng của nền tảng ezone ngày hôm nay.</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+            Xuất báo cáo
+          </button>
+          <button className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm">
+            Tải lại
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-            <Users size={24} />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        {/* Card 1 */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-[100px] -z-0 transition-transform group-hover:scale-110"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Tổng người dùng</p>
+              <h3 className="text-3xl font-bold text-gray-900">{dummyAdminStats.totalUsers.toLocaleString()}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-blue-100/50 flex items-center justify-center text-blue-600 backdrop-blur-sm border border-blue-100">
+              <Users size={24} />
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium">Tổng người dùng</p>
-            <p className="text-2xl font-bold text-gray-900">{dummyAdminStats.totalUsers.toLocaleString()}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-            <BookOpen size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium">Khóa học</p>
-            <p className="text-2xl font-bold text-gray-900">{dummyAdminStats.totalCourses}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-            <DollarSign size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium">Doanh thu</p>
-            <p className="text-2xl font-bold text-gray-900">{dummyAdminStats.totalRevenue}</p>
+          <div className="mt-4 flex items-center text-sm relative z-10">
+            <span className="text-green-500 font-medium flex items-center bg-green-50 px-2 py-0.5 rounded-full"><TrendingUp size={14} className="mr-1"/> +12%</span>
+            <span className="text-gray-400 ml-2">so với tháng trước</span>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-            <Activity size={24} />
+
+        {/* Card 2 */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-[100px] -z-0 transition-transform group-hover:scale-110"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Khóa học</p>
+              <h3 className="text-3xl font-bold text-gray-900">{dummyAdminStats.totalCourses}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-purple-100/50 flex items-center justify-center text-purple-600 backdrop-blur-sm border border-purple-100">
+              <BookOpen size={24} />
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium">Lớp đang mở</p>
-            <p className="text-2xl font-bold text-gray-900">{dummyAdminStats.activeClasses}</p>
+          <div className="mt-4 flex items-center text-sm relative z-10">
+            <span className="text-green-500 font-medium flex items-center bg-green-50 px-2 py-0.5 rounded-full"><TrendingUp size={14} className="mr-1"/> +3</span>
+            <span className="text-gray-400 ml-2">khóa học mới</span>
+          </div>
+        </div>
+
+        {/* Card 3 */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-[100px] -z-0 transition-transform group-hover:scale-110"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Doanh thu</p>
+              <h3 className="text-3xl font-bold text-gray-900">{dummyAdminStats.totalRevenue}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100/50 flex items-center justify-center text-emerald-600 backdrop-blur-sm border border-emerald-100">
+              <DollarSign size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm relative z-10">
+            <span className="text-red-500 font-medium flex items-center bg-red-50 px-2 py-0.5 rounded-full"><TrendingDown size={14} className="mr-1"/> -2.4%</span>
+            <span className="text-gray-400 ml-2">so với tuần trước</span>
+          </div>
+        </div>
+
+        {/* Card 4 */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-[100px] -z-0 transition-transform group-hover:scale-110"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Lớp đang mở</p>
+              <h3 className="text-3xl font-bold text-gray-900">{dummyAdminStats.activeClasses}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-orange-100/50 flex items-center justify-center text-orange-600 backdrop-blur-sm border border-orange-100">
+              <Activity size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm relative z-10">
+            <span className="text-green-500 font-medium flex items-center bg-green-50 px-2 py-0.5 rounded-full"><TrendingUp size={14} className="mr-1"/> +15</span>
+            <span className="text-gray-400 ml-2">lớp học mới</span>
           </div>
         </div>
       </div>
       
-      {/* Biểu đồ giả lập */}
+      {/* Biểu đồ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-80 flex flex-col items-center justify-center">
-          <p className="text-gray-400 mb-4">Biểu đồ người dùng đăng ký mới</p>
-          <div className="w-full h-48 bg-gray-50 rounded border border-dashed border-gray-300 flex items-center justify-center">
-            <span className="text-gray-400">Chart Area</span>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-900 text-lg">Biểu đồ người dùng mới</h3>
+            <select className="bg-gray-50 border border-gray-200 text-sm font-medium text-gray-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-gray-300 cursor-pointer">
+              <option>7 ngày qua</option>
+              <option>30 ngày qua</option>
+            </select>
+          </div>
+          <div className="w-full h-72 bg-gradient-to-b from-blue-50/30 to-transparent rounded-xl border border-dashed border-blue-200 flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNFMkU4RjAiLz48L3N2Zz4=')] opacity-30"></div>
+            <BarChart3 size={48} className="text-blue-300 mb-3 z-10" strokeWidth={1.5} />
+            <span className="text-blue-500 font-medium z-10">Đang đồng bộ dữ liệu biểu đồ...</span>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-80 flex flex-col items-center justify-center">
-          <p className="text-gray-400 mb-4">Biểu đồ doanh thu hàng tháng</p>
-          <div className="w-full h-48 bg-gray-50 rounded border border-dashed border-gray-300 flex items-center justify-center">
-            <span className="text-gray-400">Chart Area</span>
+
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-900 text-lg">Doanh thu theo tháng</h3>
+            <button className="text-sm font-medium text-primary hover:text-red-700 transition-colors">Xem chi tiết</button>
+          </div>
+          <div className="w-full h-72 bg-gradient-to-b from-emerald-50/30 to-transparent rounded-xl border border-dashed border-emerald-200 flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNFMkU4RjAiLz48L3N2Zz4=')] opacity-30"></div>
+            <LineChart size={48} className="text-emerald-300 mb-3 z-10" strokeWidth={1.5} />
+            <span className="text-emerald-500 font-medium z-10">Đang tính toán dòng tiền...</span>
           </div>
         </div>
       </div>
