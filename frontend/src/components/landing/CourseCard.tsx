@@ -1,8 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../common/Button';
 import { BookOpen, Users, Clock } from 'lucide-react';
 
 interface CourseCardProps {
+  id: number;
   title: string;
   image: string;
   instructor: string;
@@ -11,7 +13,7 @@ interface CourseCardProps {
   students: number;
 }
 
-export const CourseCard: React.FC<CourseCardProps> = ({ title, image, instructor, price, duration, students }) => {
+export const CourseCard: React.FC<CourseCardProps> = ({ id, title, image, instructor, price, duration, students }) => {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col group">
       <div className="relative overflow-hidden">
@@ -19,7 +21,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({ title, image, instructor
         <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold text-primary">Hot</div>
       </div>
       <div className="p-5 flex flex-col flex-grow">
-        <h3 className="text-lg font-bold text-text-main mb-2 line-clamp-2 hover:text-primary cursor-pointer">{title}</h3>
+        <Link to={`/courses/${id}`}>
+          <h3 className="text-lg font-bold text-text-main mb-2 line-clamp-2 hover:text-primary cursor-pointer">{title}</h3>
+        </Link>
         <p className="text-sm text-text-body mb-4">Giảng viên: <span className="font-medium text-text-main">{instructor}</span></p>
         
         <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
@@ -35,7 +39,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({ title, image, instructor
         
         <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
           <span className="text-xl font-bold text-primary">{price}</span>
-          <Button variant="outline" className="text-sm px-3 py-1">Chi tiết</Button>
+          <Link to={`/courses/${id}`}>
+            <Button variant="outline" className="text-sm px-3 py-1">Chi tiết</Button>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,11 +1,58 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header } from '../../components/landing/Header';
 import { CourseCard } from '../../components/landing/CourseCard';
 import { Button } from '../../components/common/Button';
 import { Search } from 'lucide-react';
-import { dummyCourses, dummyLandingStats } from '../../mocks/data';
+import { dummyLandingStats } from '../../mocks/data';
+import { api } from '../../services/api';
+import { Link } from 'react-router-dom';
+
+interface CourseCatalog {
+  id: number;
+  courseName: string;
+  description: string;
+  price: number;
+  duration: string;
+  level: string;
+  thumbnail?: string;
+}
 
 export const HomePage: React.FC = () => {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await api.get<any>('/api/v1/courses?size=6');
+        const content = res.data?.content || res.data || [];
+        
+        const mapped = content.map((c: CourseCatalog) => ({
+          id: c.id,
+          title: c.courseName,
+          image: c.thumbnail ? (c.thumbnail.startsWith('http') ? c.thumbnail : c.thumbnail) : "https://images.unsplash.com/photo-1546410531-ea4cea477149?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          instructor: "Giảng viên Hệ thống",
+          price: c.price ? `${c.price.toLocaleString('vi-VN')} VNĐ` : 'Miễn phí',
+          duration: c.duration || '3 tháng',
+          students: Math.floor(Math.random() * 100) + 50 // Aesthetic random student count
+        }));
+        
+        setCourses(mapped);
+      } catch (err) {
+        console.error('Failed to load courses:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const filteredCourses = courses.filter(c => 
+    c.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <Header />
@@ -25,7 +72,9 @@ export const HomePage: React.FC = () => {
               Khám phá các khóa học chất lượng cao với đội ngũ giảng viên giàu kinh nghiệm. Bắt đầu hành trình chinh phục tri thức của bạn ngay hôm nay!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Button className="px-8 py-3 text-lg">Khám phá khóa học</Button>
+              <Link to="/courses">
+                <Button className="px-8 py-3 text-lg">Khám phá khóa học</Button>
+              </Link>
               <Button variant="outline" className="px-8 py-3 text-lg bg-white">Nhận tư vấn ngay</Button>
             </div>
             
@@ -71,20 +120,35 @@ export const HomePage: React.FC = () => {
               <input 
                 type="text" 
                 placeholder="Tìm kiếm khóa học..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full md:w-80 h-12 pl-12 pr-4 rounded-full border border-border-color focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm"
               />
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {dummyCourses.map(course => (
-              <CourseCard key={course.id} {...course} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-500">Đang tải danh sách khóa học...</p>
+            </div>
+          ) : filteredCourses.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              Không tìm thấy khóa học nào.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredCourses.map(course => (
+                <CourseCard key={course.id} {...course} />
+              ))}
+            </div>
+          )}
 
           <div className="mt-12 text-center">
-            <Button variant="outline" className="px-8 py-3 rounded-full hover:bg-primary hover:text-white hover:border-primary transition-all">Xem tất cả khóa học</Button>
+            <Link to="/courses">
+              <Button variant="outline" className="px-8 py-3 rounded-full hover:bg-primary hover:text-white hover:border-primary transition-all">Xem tất cả khóa học</Button>
+            </Link>
           </div>
         </div>
       </section>

@@ -1,9 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Users, BookOpen, CheckSquare, LogOut } from 'lucide-react';
-import { dummyTeacher } from '../../mocks/data';
+import { useAuth } from '../../context/AuthContext';
 
 export const TeacherSidebar: React.FC = () => {
+  const { user, logout } = useAuth();
+
+  if (!user) return null;
+
   return (
     <aside className="w-64 h-screen bg-accent border-r border-border-color flex flex-col fixed left-0 top-0">
       <div className="p-6">
@@ -39,13 +43,13 @@ export const TeacherSidebar: React.FC = () => {
       
       <div className="mt-auto p-6 border-t border-border-color">
         <div className="flex items-center gap-3 mb-4">
-          <img src={dummyTeacher.avatar} alt="Avatar" className="w-10 h-10 rounded-full" />
+          <img src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-200" />
           <div>
-            <p className="text-sm font-bold text-text-main">{dummyTeacher.name}</p>
-            <p className="text-xs text-text-body">{dummyTeacher.role}</p>
+            <p className="text-sm font-bold text-text-main">{user.fullName}</p>
+            <p className="text-xs text-text-body">Giảng viên</p>
           </div>
         </div>
-        <button className="flex items-center gap-3 text-text-body hover:text-primary transition-colors w-full px-3 py-2 rounded-md hover:bg-white/50">
+        <button onClick={logout} className="flex items-center gap-3 text-text-body hover:text-primary transition-colors w-full px-3 py-2 rounded-md hover:bg-white/50">
           <LogOut size={20} />
           Đăng xuất
         </button>

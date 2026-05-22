@@ -58,6 +58,16 @@ public class ClassroomController {
         return ResponseEntity.ok(ApiResponse.success(classes));
     }
 
+    @Operation(summary = "Get class details by ID")
+    @GetMapping("/{classId}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<ClassEntity>> getClassById(@PathVariable("classId") Integer classId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("REST request to get class details for ID {} by user {}", classId, username);
+        ClassEntity classroom = classroomService.getClassById(classId, username);
+        return ResponseEntity.ok(ApiResponse.success(classroom));
+    }
+
     @Operation(summary = "Get all sessions of a classroom")
     @GetMapping("/{classId}/sessions")
     @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
