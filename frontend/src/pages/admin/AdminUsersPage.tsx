@@ -1,88 +1,224 @@
-import React from 'react';
-import { Search, Filter, Edit, Trash2, ShieldAlert } from 'lucide-react';
-import { dummyUsersList } from '../../mocks/data';
+import React, { useEffect, useState } from 'react';
+import { Search, ShieldAlert, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'GUEST';
+  avatar: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export const AdminUsersPage: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL');
+  const [togglingId, setTogglingId] = useState<number | null>(null);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Fetch all users. For convenience, fetch a large page size to handle list easily
+      const response = await api.get<{ content: User[] }>('/api/v1/users?size=100');
+      setUsers(response.data.content || []);
+    } catch (err: any) {
+      setError(err.message || 'Không thể tải danh sách người dùng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleToggleActive = async (id: number) => {
+    try {
+      setTogglingId(id);
+      const res = await api.patch<User>(`/api/v1/users/${id}/toggle-active`);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: res.data.isActive } : u));
+    } catch (err: any) {
+      alert(err.message || 'Có lỗi xảy ra khi cập nhật trạng thái người dùng');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
+
+    return matchesSearch && matchesRole;
+  });
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">Quản trị</span>;
+      case 'TEACHER':
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-100">Giảng viên</span>;
+      case 'STUDENT':
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">Học viên</span>;
+      case 'GUEST':
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-600 border border-gray-100">Khách</span>;
+      default:
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-500 border border-gray-100">{role}</span>;
+    }
+  };
+
   return (
-    <div>
+    <div className="animate-fadeIn">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý người dùng</h1>
-          <p className="text-gray-500">Phân quyền và quản lý tài khoản trên hệ thống.</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý người dùng</h1>
+          <p className="text-gray-500 text-sm mt-1">Phân quyền và quản lý tài khoản trên toàn bộ hệ thống.</p>
         </div>
-        <Button variant="primary" className="bg-gray-900 hover:bg-gray-800">Thêm người dùng mới</Button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between gap-4">
+        <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between gap-4 bg-gray-50/50">
           <div className="relative w-full md:w-96">
             <input 
               type="text" 
-              placeholder="Tìm kiếm theo tên, email..." 
-              className="w-full h-10 pl-10 pr-4 rounded-md border border-gray-300 focus:outline-none focus:border-gray-900 text-sm"
+              placeholder="Tìm kiếm theo tên, email, tài khoản..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 focus:outline-none focus:border-gray-950 focus:ring-1 focus:ring-gray-950 text-sm transition-all bg-white"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           </div>
           <div className="flex gap-2">
-            <select className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-gray-900">
-              <option>Vai trò: Tất cả</option>
-              <option>Học viên</option>
-              <option>Giảng viên</option>
+            <select 
+              value={roleFilter}
+              onChange={e => setRoleFilter(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-gray-950 focus:ring-1 focus:ring-gray-950 bg-white text-gray-700 font-medium cursor-pointer"
+            >
+              <option value="ALL">Tất cả vai trò</option>
+              <option value="ADMIN">Quản trị viên</option>
+              <option value="TEACHER">Giảng viên</option>
+              <option value="STUDENT">Học viên</option>
+              <option value="GUEST">Khách (Chờ thanh toán)</option>
             </select>
-            <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5 border border-gray-300 rounded-md text-sm">
-              <Filter size={16} /> Lọc
-            </button>
+            <Button variant="outline" size="sm" onClick={fetchUsers} className="flex items-center gap-1.5 h-10">
+              Tải lại
+            </Button>
           </div>
         </div>
+
+        {error && (
+          <div className="p-6 text-center text-red-600 bg-red-50 border-b border-red-100 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-500 border-b border-gray-200">
-              <tr>
-                <th className="p-4 font-medium">Họ & Tên</th>
-                <th className="p-4 font-medium">Email</th>
-                <th className="p-4 font-medium">Vai trò</th>
-                <th className="p-4 font-medium">Ngày tham gia</th>
-                <th className="p-4 font-medium text-center">Trạng thái</th>
-                <th className="p-4 font-medium text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {dummyUsersList.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 font-medium text-gray-900">{user.name}</td>
-                  <td className="p-4 text-gray-500">{user.email}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'Giảng viên' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-500">{user.date}</td>
-                  <td className="p-4 text-center">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.status === 'Hoạt động' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right flex items-center justify-end gap-2">
-                    <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Chỉnh sửa">
-                      <Edit size={16} />
-                    </button>
-                    {user.status === 'Hoạt động' ? (
-                      <button className="p-2 text-gray-400 hover:text-red-600 transition-colors" title="Khóa tài khoản">
-                        <ShieldAlert size={16} />
-                      </button>
-                    ) : (
-                      <button className="p-2 text-gray-400 hover:text-green-600 transition-colors" title="Xóa tài khoản">
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </td>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <Loader2 className="animate-spin text-gray-400" size={32} />
+              <span className="text-gray-500 text-sm">Đang tải danh sách người dùng...</span>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="text-center py-16 text-gray-500 text-sm font-medium">
+              Không tìm thấy người dùng nào phù hợp.
+            </div>
+          ) : (
+            <table className="w-full text-left text-sm border-collapse">
+              <thead className="bg-gray-50 text-gray-500 border-b border-gray-200 font-semibold uppercase text-xs tracking-wider">
+                <tr>
+                  <th className="p-4 pl-6">Họ & Tên</th>
+                  <th className="p-4">Tài khoản</th>
+                  <th className="p-4">Email / SĐT</th>
+                  <th className="p-4">Vai trò</th>
+                  <th className="p-4">Ngày tham gia</th>
+                  <th className="p-4 text-center">Trạng thái</th>
+                  <th className="p-4 pr-6 text-right">Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-150">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4 pl-6 font-semibold text-gray-900">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={user.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.username}`} 
+                          alt={user.fullName} 
+                          className="w-9 h-9 rounded-full object-cover border border-gray-200 bg-gray-100" 
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-900">{user.fullName}</p>
+                          <p className="text-xs text-gray-400 font-normal">ID: #{user.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-gray-700 font-mono text-xs">{user.username}</td>
+                    <td className="p-4">
+                      <p className="text-gray-700">{user.email}</p>
+                      {user.phone && <p className="text-xs text-gray-400">{user.phone}</p>}
+                    </td>
+                    <td className="p-4">{getRoleBadge(user.role)}</td>
+                    <td className="p-4 text-gray-500 text-xs">
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : 'N/A'}
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 ${
+                        user.isActive 
+                          ? 'bg-green-50 text-green-700 border border-green-150' 
+                          : 'bg-red-50 text-red-700 border border-red-150'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                        {user.isActive ? 'Hoạt động' : 'Tạm khóa'}
+                      </span>
+                    </td>
+                    <td className="p-4 pr-6 text-right">
+                      {togglingId === user.id ? (
+                        <div className="inline-block animate-spin text-gray-400 mr-2">
+                          <Loader2 size={16} />
+                        </div>
+                      ) : (
+                        user.isActive ? (
+                          <button 
+                            onClick={() => handleToggleActive(user.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" 
+                            title="Khóa tài khoản"
+                          >
+                            <ShieldAlert size={18} />
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleToggleActive(user.id)}
+                            className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" 
+                            title="Mở khóa tài khoản"
+                          >
+                            <UserCheck size={18} />
+                          </button>
+                        )
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
   );
 };
+

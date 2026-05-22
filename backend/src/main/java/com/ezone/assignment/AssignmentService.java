@@ -201,6 +201,49 @@ public class AssignmentService {
         return scoreRepository.findScoresForStudent(username);
     }
 
+    @Transactional(readOnly = true)
+    public List<SubmissionResponse> getAssignmentSubmissions(Integer assignmentId, String username) {
+        log.info("Fetching submissions for assignment ID: {} by user: {}", assignmentId, username);
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bài tập không tồn tại"));
+
+        ClassEntity classEntity = assignment.getClassEntity();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        if (user.getRole() == User.Role.TEACHER) {
+            if (classEntity.getInstructor() == null ||
+                    !classEntity.getInstructor().getUser().getId().equals(user.getId())) {
+                throw new ForbiddenException("Bạn không phải giảng viên phụ trách lớp học này");
+            }
+        } else if (user.getRole() != User.Role.ADMIN) {
+            throw new ForbiddenException("Bạn không có quyền truy cập");
+        }
+
+        List<Submission> submissions = submissionRepository.findByAssignmentId(assignmentId);
+        List<SubmissionResponse> responses = new ArrayList<>();
+
+        for (Submission s : submissions) {
+            Score score = scoreRepository.findBySubmissionId(s.getId()).orElse(null);
+            SubmissionResponse resp = new SubmissionResponse();
+            resp.setId(s.getId());
+            resp.setStudentId(s.getStudent().getId());
+            resp.setStudentName(s.getStudent().getFullName());
+            resp.setAssignmentId(assignment.getId());
+            resp.setAssignmentTitle(assignment.getTitle());
+            resp.setContent(s.getContent());
+            resp.setFileUrl(s.getFileUrl());
+            resp.setSubmittedAt(s.getSubmittedAt());
+            if (score != null) {
+                resp.setScore(score.getScore());
+                resp.setTeacherFeedback(score.getTeacherFeedback());
+            }
+            responses.add(resp);
+        }
+
+        return responses;
+    }
+
     private void checkClassAccess(User user, ClassEntity classEntity) {
         if (user.getRole() == User.Role.ADMIN) {
             return;

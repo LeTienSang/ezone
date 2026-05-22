@@ -85,6 +85,15 @@ public class ClassroomService {
     }
 
     @Transactional(readOnly = true)
+    public ClassEntity getClassById(Integer classId, String username) {
+        log.info("Fetching class details for ID: {} requested by {}", classId, username);
+        ClassEntity classEntity = classRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lớp học"));
+        checkClassAccess(username, classEntity);
+        return classEntity;
+    }
+
+    @Transactional(readOnly = true)
     public List<ClassEntity> getMyClasses(String username) {
         log.info("Fetching classes for user: {}", username);
         User user = userRepository.findByUsername(username)

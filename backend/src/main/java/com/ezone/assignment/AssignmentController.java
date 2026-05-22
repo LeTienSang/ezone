@@ -83,4 +83,15 @@ public class AssignmentController {
         List<StudentScoreResponse> scores = assignmentService.getMyScores(username);
         return ResponseEntity.ok(ApiResponse.success(scores));
     }
+
+    @Operation(summary = "Get list of all submissions for an assignment (Teacher/Admin only)")
+    @GetMapping("/assignments/{assignmentId}/submissions")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getSubmissions(
+            @PathVariable("assignmentId") Integer assignmentId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("REST request to get submissions for assignment ID {} by user {}", assignmentId, username);
+        List<SubmissionResponse> submissions = assignmentService.getAssignmentSubmissions(assignmentId, username);
+        return ResponseEntity.ok(ApiResponse.success(submissions));
+    }
 }

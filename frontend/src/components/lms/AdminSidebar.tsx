@@ -1,9 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Book, DollarSign, LogOut, Settings } from 'lucide-react';
-import { dummyAdmin } from '../../mocks/data';
+import { useAuth } from '../../context/AuthContext';
 
 export const AdminSidebar: React.FC = () => {
+  const { user, logout } = useAuth();
+
+  if (!user) return null;
+
   return (
     <aside className="w-64 h-screen bg-[#0f172a] border-r border-slate-800 flex flex-col fixed left-0 top-0 text-slate-300 font-sans shadow-2xl z-20">
       <div className="p-6">
@@ -43,15 +47,15 @@ export const AdminSidebar: React.FC = () => {
 
       <div className="mt-auto p-6 border-t border-slate-800/60 bg-slate-900/50">
         <div className="flex items-center gap-3 mb-5">
-          <img src={dummyAdmin.avatar} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-slate-700" />
+          <img src={user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=120"} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-slate-700 bg-gray-700" />
           <div>
-            <p className="text-sm font-bold text-white">{dummyAdmin.name}</p>
+            <p className="text-sm font-bold text-white">{user.fullName}</p>
             <p className="text-xs text-slate-400 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Online
             </p>
           </div>
         </div>
-        <button className="flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-red-500/10 hover:text-red-400 transition-all w-full px-3 py-2.5 rounded-lg border border-slate-800">
+        <button onClick={logout} className="flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-red-500/10 hover:text-red-400 transition-all w-full px-3 py-2.5 rounded-lg border border-slate-800">
           <LogOut size={18} />
           <span className="text-sm font-medium">Đăng xuất</span>
         </button>

@@ -23,6 +23,7 @@ import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import { AdminCoursesPage } from './pages/admin/AdminCoursesPage';
 import { AdminClassesPage } from './pages/admin/AdminClassesPage';
 import { AdminPaymentsPage } from './pages/admin/AdminPaymentsPage';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
 import './index.css';
 
 function App() {
@@ -38,7 +39,11 @@ function App() {
         <Route path="/about" element={<AboutPage />} />
         
         {/* Student Routes */}
-        <Route path="/student" element={<DashboardLayout />}>
+        <Route path="/student" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Navigate to="/student/timetable" replace />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="timetable" element={<TimetablePage />} />
@@ -48,7 +53,11 @@ function App() {
         </Route>
 
         {/* Teacher Routes */}
-        <Route path="/teacher" element={<TeacherLayout />}>
+        <Route path="/teacher" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <TeacherLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Navigate to="/teacher/classes" replace />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="classes" element={<TeacherClassesPage />} />
@@ -58,7 +67,11 @@ function App() {
         </Route>
 
         {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="users" element={<AdminUsersPage />} />

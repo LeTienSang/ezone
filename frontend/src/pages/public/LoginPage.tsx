@@ -1,11 +1,40 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { useAuth } from '../../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const user = await login(email, password);
+      // Redirect based on role
+      if (user.role === 'ADMIN') {
+        navigate('/admin');
+      } else if (user.role === 'TEACHER') {
+        navigate('/teacher');
+      } else {
+        navigate('/student');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản và mật khẩu.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -21,11 +50,19 @@ export const LoginPage: React.FC = () => {
           <p className="text-sm text-text-body mt-2">Chào mừng bạn quay trở lại với ezone!</p>
         </div>
 
-        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <Input 
             label="Email hoặc Tên đăng nhập" 
             type="email" 
             placeholder="Nhập email của bạn" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required 
           />
           
@@ -34,6 +71,8 @@ export const LoginPage: React.FC = () => {
               label="Mật khẩu" 
               type={showPassword ? 'text' : 'password'} 
               placeholder="Nhập mật khẩu" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
             <button
@@ -65,8 +104,8 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <Button type="submit" variant="primary" fullWidth>
-            Đăng nhập
+          <Button type="submit" variant="primary" fullWidth disabled={loading}>
+            {loading ? 'Đang xử lý...' : 'Đăng nhập'}
           </Button>
 
           <div className="relative my-6">
