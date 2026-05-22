@@ -1,0 +1,140 @@
+package com.ezone.payment;
+
+import com.ezone.common.dto.PageResponse;
+import com.ezone.common.exception.BadRequestException;
+import com.ezone.common.exception.ResourceNotFoundException;
+import com.ezone.enrollment.Enrollment;
+import com.ezone.enrollment.EnrollmentRepository;
+import com.ezone.user.User;
+import com.ezone.user.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.*;
+import java.time.LocalDateTime;
+
+@Slf4j
+@Service
+public class PaymentService {
+    private final PaymentRepository paymentRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
+
+    public PaymentService(PaymentRepository paymentRepository, 
+                          EnrollmentRepository enrollmentRepository,
+                          UserRepository userRepository) {
+        this.paymentRepository = paymentRepository;
+        this.enrollmentRepository = enrollmentRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public Payment submitPayment(Integer enrollmentId, BigDecimal amount, String paymentMethod, String transactionId, MultipartFile receiptImage) throws IOException {
+        log.info("Submitting payment proof for enrollment ID: {}, amount: {}, method: {}, txn ID: {}", enrollmentId, amount, paymentMethod, transactionId);
+
+        if (receiptImage == null || receiptImage.isEmpty()) {
+            throw new BadRequestException("Chưa tải lên ảnh minh chứng");
+        }
+
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Đơn đăng ký không tồn tại"));
+
+        String proofUrl = saveFile(receiptImage, "receipts");
+
+        Payment payment = paymentRepository.findByEnrollmentId(enrollmentId).orElse(new Payment());
+        payment.setEnrollment(enrollment);
+        payment.setAmount(amount);
+        payment.setPaymentMethod(paymentMethod);
+        payment.setTransactionId(transactionId);
+        payment.setProofUrl(proofUrl);
+        payment.setStatus(Payment.Status.PENDING);
+        payment.setPaymentDate(LocalDateTime.now());
+
+        Payment saved = paymentRepository.save(payment);
+        log.info("Payment proof saved successfully. Payment ID: {}", saved.getId());
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<Payment> getAllPayments(String status, int page, int size) {
+        log.info("Fetching payments with status: {}, page: {}, size: {}", status, page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Payment> paymentPage;
+
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                Payment.Status statusEnum = Payment.Status.valueOf(status.trim().toUpperCase());
+                paymentPage = paymentRepository.findByStatus(statusEnum, pageable);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid payment status provided: {}", status);
+                throw new BadRequestException("Trạng thái thanh toán không hợp lệ: " + status);
+            }
+        } else {
+            paymentPage = paymentRepository.findAll(pageable);
+        }
+
+        return PageResponse.fromPage(paymentPage);
+    }
+
+    @Transactional
+    public Payment confirmPayment(Integer id) {
+        log.info("Confirming payment ID: {}", id);
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch thanh toán"));
+
+        payment.setStatus(Payment.Status.SUCCESS);
+        payment.setPaymentDate(LocalDateTime.now());
+        Payment savedPayment = paymentRepository.save(payment);
+
+        Enrollment enrollment = payment.getEnrollment();
+        enrollment.setStatus(Enrollment.Status.PAID);
+        enrollmentRepository.save(enrollment);
+
+        User user = enrollment.getUser();
+        if (user.getRole() == User.Role.GUEST) {
+            user.setRole(User.Role.STUDENT);
+            userRepository.save(user);
+            log.info("User {} upgraded from GUEST to STUDENT role", user.getUsername());
+        }
+
+        log.info("Payment ID {} confirmed successfully", id);
+        return savedPayment;
+    }
+
+    @Transactional
+    public Payment rejectPayment(Integer id, RejectRequest req) {
+        log.info("Rejecting payment ID: {} for reason: {}", id, req.getReason());
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch thanh toán"));
+
+        payment.setStatus(Payment.Status.FAILED);
+        payment.setPaymentDate(LocalDateTime.now());
+        Payment savedPayment = paymentRepository.save(payment);
+
+        Enrollment enrollment = payment.getEnrollment();
+        enrollment.setStatus(Enrollment.Status.CANCELLED);
+        enrollmentRepository.save(enrollment);
+
+        log.info("Payment ID {} rejected successfully", id);
+        return savedPayment;
+    }
+
+    private String saveFile(MultipartFile file, String subFolder) throws IOException {
+        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path uploadPath = Paths.get("uploads", subFolder);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        Path filePath = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        return "/uploads/" + subFolder + "/" + fileName;
+    }
+}
