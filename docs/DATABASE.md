@@ -102,15 +102,12 @@ USERS ──────────────── INSTRUCTORS (1:1)
 | Cột | Kiểu | Ràng buộc | Mô tả |
 |---|---|---|---|
 | `id` | INT | PK, AUTO_INCREMENT | Khóa chính |
-| `user_id` | INT | FK → `USERS.id`, NULL | NULL nếu Guest chưa có tài khoản |
+| `user_id` | INT | FK → `USERS.id`, NOT NULL | Liên kết tới tài khoản người đăng ký (có thể có vai trò `'GUEST'` hoặc `'STUDENT'`) |
 | `course_id` | INT | FK → `COURSES_CATALOG.id`, NOT NULL | Khóa học đăng ký |
-| `full_name` | VARCHAR(100) | NOT NULL | Họ tên người đăng ký |
-| `phone` | VARCHAR(15) | NOT NULL | Số điện thoại liên hệ |
-| `email` | VARCHAR(100) | NOT NULL | Email liên hệ |
-| `status` | ENUM | DEFAULT `'pending'` | `'pending'`, `'approved'`, `'rejected'`, `'cancelled'` |
+| `status` | ENUM | DEFAULT `'pending'` | `'pending'`, `'paid'`, `'cancelled'` |
 | `registration_date` | TIMESTAMP | DEFAULT NOW() | Ngày gửi yêu cầu |
 
-> **Lý do `user_id` nullable:** Guest chưa đăng nhập vẫn có thể gửi form tư vấn. Khi Admin duyệt, sẽ liên kết với tài khoản user nếu có.
+> **Cơ chế hoạt động:** Guest chưa đăng ký tài khoản khi gửi form tư vấn sẽ được hệ thống tạo tự động một tài khoản USER với role `'GUEST'`. Khi Admin duyệt hoặc khi người dùng đăng ký chính thức, tài khoản sẽ được nâng cấp lên `'STUDENT'`.
 
 ---
 
@@ -124,7 +121,7 @@ USERS ──────────────── INSTRUCTORS (1:1)
 | `payment_method` | VARCHAR(50) | NULL | Hình thức: "Banking", "Momo", "Tiền mặt" |
 | `transaction_id` | VARCHAR(100) | NULL | Mã giao dịch đối soát |
 | `receipt_image` | VARCHAR(255) | NULL | Đường dẫn ảnh minh chứng chuyển khoản |
-| `status` | ENUM | DEFAULT `'pending'` | `'pending'`, `'success'`, `'rejected'` |
+| `status` | ENUM | DEFAULT `'pending'` | `'pending'`, `'success'`, `'failed'` |
 | `reject_reason` | VARCHAR(255) | NULL | Lý do từ chối (nếu có) |
 | `payment_date` | TIMESTAMP | NULL | Thời điểm Admin xác nhận thành công |
 
@@ -311,7 +308,7 @@ public enum ClassStatus {
 
 ## Lưu ý thiết kế quan trọng
 
-- **ENROLLMENTS.user_id có thể NULL:** Guest chưa đăng ký tài khoản vẫn được gửi form tư vấn.
+- **ENROLLMENTS.user_id không thể NULL:** Guest chưa đăng ký tài khoản khi gửi form tư vấn sẽ được hệ thống tự động tạo tài khoản với vai trò 'GUEST'.
 - **CLASS_MEMBERS là bảng trung gian quan trọng:** Mọi kiểm tra quyền truy cập tài liệu, bài tập, điểm danh đều JOIN qua bảng này.
 - **SUBMISSIONS unique (assignment_id, student_id):** Học viên chỉ có thể nộp một bài cho mỗi assignment; nộp lại = UPDATE bản ghi cũ nếu còn trong hạn.
 - **SCORES.submission_id UNIQUE:** Đảm bảo mỗi bài nộp chỉ có đúng một bản ghi điểm.

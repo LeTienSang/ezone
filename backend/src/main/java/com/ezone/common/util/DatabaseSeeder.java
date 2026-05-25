@@ -112,6 +112,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         course1.setDuration("3 tháng");
         course1.setLevel("Advanced");
         course1.setThumbnail("https://images.unsplash.com/photo-1546410531-ea4cea477149?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+        course1.setIsVisible(true);
         
         course1.getSyllabus().add(new CourseSyllabus(null, course1, "Chặng 1: IELTS Reading & Listening Foundation", "Xây dựng nền tảng từ vựng, ngữ pháp và phát âm cần thiết cho IELTS.", 1));
         course1.getSyllabus().add(new CourseSyllabus(null, course1, "Chặng 2: Kỹ thuật xử lý các dạng bài thi", "Luyện tập các phương pháp và chiến thuật làm bài cho cả 4 kỹ năng Listening, Reading, Writing, Speaking.", 2));
@@ -125,10 +126,21 @@ public class DatabaseSeeder implements CommandLineRunner {
         course2.setDuration("2 tháng");
         course2.setLevel("Intermediate");
         course2.setThumbnail("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+        course2.setIsVisible(true);
         
         course2.getSyllabus().add(new CourseSyllabus(null, course2, "Phần 1: Grammar & Vocabulary Booster", "Củng cố lại toàn bộ các chủ điểm ngữ pháp cốt lõi và từ vựng thông dụng trong bài thi TOEIC mới.", 1));
         course2.getSyllabus().add(new CourseSyllabus(null, course2, "Phần 2: Listening & Reading Strategy", "Mẹo làm bài nhanh, nhận diện bẫy và chiến lược phân bổ thời gian hiệu quả trong phòng thi.", 2));
         courseRepository.save(course2);
+
+        CourseCatalog course3 = new CourseCatalog();
+        course3.setCourseName("Khóa học thử nghiệm ẩn");
+        course3.setDescription("Khóa học này sẽ bị ẩn khỏi Landing Page");
+        course3.setPrice(BigDecimal.valueOf(1000000));
+        course3.setDuration("1 tháng");
+        course3.setLevel("Beginner");
+        course3.setThumbnail("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=300");
+        course3.setIsVisible(false);
+        courseRepository.save(course3);
 
         // 5. Seed Class
         ClassEntity classEntity = new ClassEntity();

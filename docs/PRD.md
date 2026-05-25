@@ -145,7 +145,7 @@ Xây dựng một nền tảng Web tích hợp Landing Page quảng bá và hệ
 
 | Mã | Tên | Mô tả |
 |---|---|---|
-| UC09 | Thanh toán học phí | Tải lên minh chứng chuyển khoản vào PAYMENTS trạng thái "Chờ xác nhận" |
+| UC09 | Gửi minh chứng thanh toán học phí | Tải lên minh chứng chuyển khoản vào PAYMENTS trạng thái "Chờ xác nhận" |
 | UC10 | Xem thời khóa biểu | Theo dõi lịch học từ CLASS_SESSIONS của các lớp đang tham gia |
 | UC11 | Tải tài liệu học tập | Tải xuống tệp tin từ bảng MATERIALS của lớp |
 | UC12 | Xem và Nộp bài tập | Xem ASSIGNMENTS, upload file bài làm vào SUBMISSIONS trước deadline |

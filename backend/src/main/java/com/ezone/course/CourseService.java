@@ -21,9 +21,9 @@ public class CourseService {
 
     @Transactional(readOnly = true)
     public PageResponse<CourseCatalog> getAllCourses(int page, int size) {
-        log.info("Fetching courses, page: {}, size: {}", page, size);
+        log.info("Fetching active courses, page: {}, size: {}", page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<CourseCatalog> courses = courseRepository.findAll(pageable);
+        Page<CourseCatalog> courses = courseRepository.findAllByIsVisibleTrue(pageable);
         return PageResponse.fromPage(courses);
     }
 
