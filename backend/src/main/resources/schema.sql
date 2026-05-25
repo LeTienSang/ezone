@@ -1,8 +1,24 @@
 CREATE DATABASE IF NOT EXISTS ezone_lms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE ezone_lms;
 
+-- Clean up existing tables in reverse dependency order
+DROP TABLE IF EXISTS SCORES;
+DROP TABLE IF EXISTS SUBMISSIONS;
+DROP TABLE IF EXISTS ASSIGNMENTS;
+DROP TABLE IF EXISTS MATERIALS;
+DROP TABLE IF EXISTS ATTENDANCE;
+DROP TABLE IF EXISTS CLASS_SESSIONS;
+DROP TABLE IF EXISTS CLASS_MEMBERS;
+DROP TABLE IF EXISTS CLASSES;
+DROP TABLE IF EXISTS PAYMENTS;
+DROP TABLE IF EXISTS ENROLLMENTS;
+DROP TABLE IF EXISTS COURSE_SYLLABUS;
+DROP TABLE IF EXISTS COURSES_CATALOG;
+DROP TABLE IF EXISTS INSTRUCTORS;
+DROP TABLE IF EXISTS USERS;
+
 -- 1. Bảng USERS
-CREATE TABLE users (
+CREATE TABLE USERS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -16,49 +32,50 @@ CREATE TABLE users (
 );
 
 -- 2. Bảng INSTRUCTORS
-CREATE TABLE instructors (
+CREATE TABLE INSTRUCTORS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     bio TEXT,
     specialization VARCHAR(255),
     experience_years INT,
     rating DECIMAL(3,2) DEFAULT 0.00,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES USERS(id) ON DELETE CASCADE
 );
 
 -- 3. Bảng COURSES_CATALOG
-CREATE TABLE courses_catalog (
+CREATE TABLE COURSES_CATALOG (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     duration VARCHAR(50),
     level VARCHAR(50),
-    thumbnail VARCHAR(255)
+    thumbnail VARCHAR(255),
+    is_visible BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE IF NOT EXISTS course_syllabus (
+CREATE TABLE IF NOT EXISTS COURSE_SYLLABUS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     sort_order INT NOT NULL,
-    FOREIGN KEY (course_id) REFERENCES courses_catalog(id) ON DELETE CASCADE
+    FOREIGN KEY (course_id) REFERENCES COURSES_CATALOG(id) ON DELETE CASCADE
 );
 
 -- 4. Bảng ENROLLMENTS
-CREATE TABLE enrollments (
+CREATE TABLE ENROLLMENTS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     course_id INT NOT NULL,
     status ENUM('pending', 'paid', 'cancelled') DEFAULT 'pending',
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses_catalog(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES USERS(id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES COURSES_CATALOG(id) ON DELETE CASCADE
 );
 
 -- 5. Bảng PAYMENTS
-CREATE TABLE payments (
+CREATE TABLE PAYMENTS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     enrollment_id INT NOT NULL UNIQUE,
     amount DECIMAL(10,2) NOT NULL,
@@ -67,11 +84,11 @@ CREATE TABLE payments (
     proof_url VARCHAR(255),
     status ENUM('pending', 'success', 'failed') DEFAULT 'pending',
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE
+    FOREIGN KEY (enrollment_id) REFERENCES ENROLLMENTS(id) ON DELETE CASCADE
 );
 
 -- 6. Bảng CLASSES
-CREATE TABLE classes (
+CREATE TABLE CLASSES (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     instructor_id INT NOT NULL,
@@ -80,83 +97,83 @@ CREATE TABLE classes (
     end_date DATE,
     max_students INT,
     status ENUM('upcoming', 'active', 'completed') DEFAULT 'upcoming',
-    FOREIGN KEY (course_id) REFERENCES courses_catalog(id),
-    FOREIGN KEY (instructor_id) REFERENCES instructors(id)
+    FOREIGN KEY (course_id) REFERENCES COURSES_CATALOG(id),
+    FOREIGN KEY (instructor_id) REFERENCES INSTRUCTORS(id)
 );
 
 -- 7. Bảng CLASS_MEMBERS
-CREATE TABLE class_members (
+CREATE TABLE CLASS_MEMBERS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     class_id INT NOT NULL,
     student_id INT NOT NULL,
     joined_date DATE,
-    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES CLASSES(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES USERS(id) ON DELETE CASCADE,
     UNIQUE KEY unique_member (class_id, student_id)
 );
 
 -- 8. Bảng CLASS_SESSIONS
-CREATE TABLE class_sessions (
+CREATE TABLE CLASS_SESSIONS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     class_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     session_date DATETIME NOT NULL,
     room VARCHAR(255),
     content TEXT,
-    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+    FOREIGN KEY (class_id) REFERENCES CLASSES(id) ON DELETE CASCADE
 );
 
 -- 9. Bảng ATTENDANCE
-CREATE TABLE attendance (
+CREATE TABLE ATTENDANCE (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_id INT NOT NULL,
     student_id INT NOT NULL,
     status ENUM('present', 'absent', 'late') NOT NULL,
     note VARCHAR(255),
-    FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (session_id) REFERENCES CLASS_SESSIONS(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES USERS(id) ON DELETE CASCADE,
     UNIQUE KEY unique_attendance (session_id, student_id)
 );
 
 -- 10. Bảng MATERIALS
-CREATE TABLE materials (
+CREATE TABLE MATERIALS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     class_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     file_url VARCHAR(255) NOT NULL,
     material_type ENUM('pdf', 'video', 'link', 'doc') NOT NULL,
-    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+    FOREIGN KEY (class_id) REFERENCES CLASSES(id) ON DELETE CASCADE
 );
 
 -- 11. Bảng ASSIGNMENTS
-CREATE TABLE assignments (
+CREATE TABLE ASSIGNMENTS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     class_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     due_date DATETIME NOT NULL,
     max_score INT DEFAULT 10,
-    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+    FOREIGN KEY (class_id) REFERENCES CLASSES(id) ON DELETE CASCADE
 );
 
 -- 12. Bảng SUBMISSIONS
-CREATE TABLE submissions (
+CREATE TABLE SUBMISSIONS (
     id INT AUTO_INCREMENT PRIMARY KEY,
     assignment_id INT NOT NULL,
     student_id INT NOT NULL,
     content TEXT,
     file_url VARCHAR(255),
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (assignment_id) REFERENCES ASSIGNMENTS(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES USERS(id) ON DELETE CASCADE
 );
 
 -- 13. Bảng SCORES
-CREATE TABLE scores (
+CREATE TABLE SCORES (
     id INT AUTO_INCREMENT PRIMARY KEY,
     submission_id INT NOT NULL UNIQUE,
     score DECIMAL(5,2) NOT NULL,
     teacher_feedback TEXT,
     graded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE
+    FOREIGN KEY (submission_id) REFERENCES SUBMISSIONS(id) ON DELETE CASCADE
 );

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "courses_catalog")
+@Table(name = "COURSES_CATALOG")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,6 +19,9 @@ public class CourseCatalog {
     private String duration;
     private String level;
     private String thumbnail;
+    
+    @Column(name = "is_visible")
+    private Boolean isVisible = true;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("sortOrder ASC")

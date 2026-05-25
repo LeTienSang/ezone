@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "classes")
+@Table(name = "CLASSES")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -45,7 +45,7 @@ public class ClassEntity {
 
     @ManyToMany
     @JoinTable(
-        name = "class_members",
+        name = "CLASS_MEMBERS",
         joinColumns = @JoinColumn(name = "class_id"),
         inverseJoinColumns = @JoinColumn(name = "student_id")
     )
