@@ -58,7 +58,7 @@ export const LoginPage: React.FC = () => {
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <Input 
-            label="Email hoặc Tên đăng nhập" 
+            label="Email" 
             type="email" 
             placeholder="Nhập email của bạn" 
             value={email}

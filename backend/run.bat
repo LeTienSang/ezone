@@ -1,0 +1,3 @@
+@echo off
+echo Starting ezone LMS Backend...
+"D:\IntelliJ IDEA 2026.1.1\plugins\maven\lib\maven3\bin\mvn.cmd" spring-boot:run

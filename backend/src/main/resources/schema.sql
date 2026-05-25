@@ -37,6 +37,15 @@ CREATE TABLE courses_catalog (
     thumbnail VARCHAR(255)
 );
 
+CREATE TABLE IF NOT EXISTS course_syllabus (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    sort_order INT NOT NULL,
+    FOREIGN KEY (course_id) REFERENCES courses_catalog(id) ON DELETE CASCADE
+);
+
 -- 4. Bảng ENROLLMENTS
 CREATE TABLE enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,

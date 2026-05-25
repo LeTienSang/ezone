@@ -30,6 +30,18 @@ public class EnrollmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(saved));
     }
 
+    @Operation(summary = "Get current user's enrollment requests")
+    @GetMapping("/my")
+    @PreAuthorize("hasAnyRole('STUDENT', 'GUEST', 'TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<java.util.List<Enrollment>>> getMyEnrollments(
+            @RequestParam(required = false) String status) {
+        String username = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        log.info("REST request to get enrollments for current user: {} with status: {}", username, status);
+        java.util.List<Enrollment> enrollments = enrollmentService.getMyEnrollments(username, status);
+        return ResponseEntity.ok(ApiResponse.success(enrollments));
+    }
+
     @Operation(summary = "Get paginated list of all enrollment requests (Admin only)")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")

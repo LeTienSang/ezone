@@ -49,8 +49,21 @@ public class AuthService {
     @Transactional
     public User register(RegisterRequest req) {
         log.info("Registering new student with email: {}", req.getEmail());
-        if (userRepository.findByEmail(req.getEmail()).isPresent()) {
-            log.warn("Registration failed: Email {} already exists", req.getEmail());
+        java.util.Optional<User> existingOpt = userRepository.findByEmail(req.getEmail());
+        if (existingOpt.isPresent()) {
+            User existing = existingOpt.get();
+            if (existing.getRole() == User.Role.GUEST) {
+                // Upgrade GUEST → STUDENT: user previously submitted consultation, now registering
+                log.info("Upgrading GUEST user {} to STUDENT", existing.getUsername());
+                existing.setFullName(req.getFullName());
+                existing.setPhone(req.getPhone());
+                existing.setPassword(passwordEncoder.encode(req.getPassword()));
+                existing.setRole(User.Role.STUDENT);
+                User saved = userRepository.save(existing);
+                log.info("GUEST user upgraded to STUDENT successfully: {}", saved.getUsername());
+                return saved;
+            }
+            log.warn("Registration failed: Email {} already exists with role {}", req.getEmail(), existing.getRole());
             throw new BadRequestException("Email này đã tồn tại trên hệ thống");
         }
 

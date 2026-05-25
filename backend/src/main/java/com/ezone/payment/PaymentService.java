@@ -2,6 +2,7 @@ package com.ezone.payment;
 
 import com.ezone.common.dto.PageResponse;
 import com.ezone.common.exception.BadRequestException;
+import com.ezone.common.exception.ForbiddenException;
 import com.ezone.common.exception.ResourceNotFoundException;
 import com.ezone.enrollment.Enrollment;
 import com.ezone.enrollment.EnrollmentRepository;
@@ -37,8 +38,11 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment submitPayment(Integer enrollmentId, BigDecimal amount, String paymentMethod, String transactionId, MultipartFile receiptImage) throws IOException {
-        log.info("Submitting payment proof for enrollment ID: {}, amount: {}, method: {}, txn ID: {}", enrollmentId, amount, paymentMethod, transactionId);
+    public Payment submitPayment(String username, Integer enrollmentId, String paymentMethod, String transactionId, MultipartFile receiptImage) throws IOException {
+        log.info("Submitting payment proof for enrollment ID: {}, method: {}, txn ID: {}, by user: {}", enrollmentId, paymentMethod, transactionId, username);
+
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
         if (receiptImage == null || receiptImage.isEmpty()) {
             throw new BadRequestException("Chưa tải lên ảnh minh chứng");
@@ -47,9 +51,23 @@ public class PaymentService {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Đơn đăng ký không tồn tại"));
 
+        // Ownership check: only the enrollment owner can submit payment
+        if (!enrollment.getUser().getId().equals(currentUser.getId())) {
+            log.warn("User {} attempted to submit payment for enrollment {} owned by user {}", username, enrollmentId, enrollment.getUser().getUsername());
+            throw new ForbiddenException("Bạn không có quyền thanh toán cho đơn đăng ký này");
+        }
+
+        // Guard: do not allow resetting an already approved payment back to PENDING
+        Payment payment = paymentRepository.findByEnrollmentId(enrollmentId).orElse(new Payment());
+        if (payment.getId() != null && payment.getStatus() == Payment.Status.SUCCESS) {
+            throw new BadRequestException("Thanh toán đã được duyệt, không thể gửi lại");
+        }
+
         String proofUrl = saveFile(receiptImage, "receipts");
 
-        Payment payment = paymentRepository.findByEnrollmentId(enrollmentId).orElse(new Payment());
+        // Amount derived from course price on backend — never trust client
+        BigDecimal amount = enrollment.getCourse().getPrice();
+
         payment.setEnrollment(enrollment);
         payment.setAmount(amount);
         payment.setPaymentMethod(paymentMethod);
@@ -82,6 +100,14 @@ public class PaymentService {
         }
 
         return PageResponse.fromPage(paymentPage);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<Payment> getMyPayments(String username) {
+        log.info("Fetching payments for student: {}", username);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new com.ezone.common.exception.ResourceNotFoundException("Không tìm thấy người dùng"));
+        return paymentRepository.findByEnrollmentUserIdOrderByPaymentDateDesc(user.getId());
     }
 
     @Transactional

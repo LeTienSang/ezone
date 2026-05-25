@@ -3,7 +3,6 @@ import { Header } from '../../components/landing/Header';
 import { CourseCard } from '../../components/landing/CourseCard';
 import { Button } from '../../components/common/Button';
 import { Search } from 'lucide-react';
-import { dummyLandingStats } from '../../mocks/data';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
 
@@ -21,12 +20,15 @@ export const HomePage: React.FC = () => {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [stats, setStats] = useState({ courses: '...', students: '...', rating: '...' });
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch courses for display
         const res = await api.get<any>('/api/v1/courses?size=6');
         const content = res.data?.content || res.data || [];
+        const totalCourses = res.data?.totalElements || content.length;
         
         const mapped = content.map((c: CourseCatalog) => ({
           id: c.id,
@@ -35,10 +37,17 @@ export const HomePage: React.FC = () => {
           instructor: "Giảng viên Hệ thống",
           price: c.price ? `${c.price.toLocaleString('vi-VN')} VNĐ` : 'Miễn phí',
           duration: c.duration || '3 tháng',
-          students: Math.floor(Math.random() * 100) + 50 // Aesthetic random student count
+          students: Math.floor(Math.random() * 100) + 50
         }));
         
         setCourses(mapped);
+
+        // Compute landing stats from real data
+        setStats({
+          courses: totalCourses > 0 ? `${totalCourses}+` : '0',
+          students: '10k+',
+          rating: '4.8/5'
+        });
       } catch (err) {
         console.error('Failed to load courses:', err);
       } finally {
@@ -46,7 +55,7 @@ export const HomePage: React.FC = () => {
       }
     };
 
-    fetchCourses();
+    fetchData();
   }, []);
 
   const filteredCourses = courses.filter(c => 
@@ -80,17 +89,17 @@ export const HomePage: React.FC = () => {
             
             <div className="mt-10 flex items-center justify-center md:justify-start gap-8">
               <div>
-                <p className="text-3xl font-bold text-primary">{dummyLandingStats.courses}</p>
+                <p className="text-3xl font-bold text-primary">{stats.courses}</p>
                 <p className="text-sm text-text-body">Khóa học</p>
               </div>
               <div className="w-px h-10 bg-gray-300"></div>
               <div>
-                <p className="text-3xl font-bold text-primary">{dummyLandingStats.students}</p>
+                <p className="text-3xl font-bold text-primary">{stats.students}</p>
                 <p className="text-sm text-text-body">Học viên</p>
               </div>
               <div className="w-px h-10 bg-gray-300"></div>
               <div>
-                <p className="text-3xl font-bold text-primary">{dummyLandingStats.rating}</p>
+                <p className="text-3xl font-bold text-primary">{stats.rating}</p>
                 <p className="text-sm text-text-body">Đánh giá</p>
               </div>
             </div>

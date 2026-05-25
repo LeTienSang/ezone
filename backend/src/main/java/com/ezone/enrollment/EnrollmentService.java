@@ -132,6 +132,24 @@ public class EnrollmentService {
         return saved;
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.List<Enrollment> getMyEnrollments(String username, String status) {
+        log.info("Fetching enrollments for user: {} with status: {}", username, status);
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                Enrollment.Status statusEnum = Enrollment.Status.valueOf(status.trim().toUpperCase());
+                if (statusEnum == Enrollment.Status.PENDING) {
+                    return enrollmentRepo.findByUserUsernameAndStatusAndNoPayment(username, statusEnum);
+                }
+                return enrollmentRepo.findByUserUsernameAndStatus(username, statusEnum);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid enrollment status: {}", status);
+                throw new BadRequestException("Trạng thái đơn đăng ký không hợp lệ: " + status);
+            }
+        }
+        return enrollmentRepo.findByUserUsername(username);
+    }
+
     private String generateUsernameFromEmail(String email) {
         String base = email.split("@")[0];
         if (base.length() > 40) {

@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     Optional<Payment> findByEnrollmentId(Integer enrollmentId);
     Page<Payment> findByStatus(Payment.Status status, Pageable pageable);
+    java.util.List<Payment> findByEnrollmentUserIdOrderByPaymentDateDesc(Integer userId);
 }
