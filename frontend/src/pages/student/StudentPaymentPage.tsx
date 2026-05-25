@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Upload, CreditCard, Clock, AlertCircle, CheckCircle, Loader2, XCircle } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { api } from '../../services/api';
@@ -34,6 +34,22 @@ export const StudentPaymentPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isDragActive, setIsDragActive] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!receiptFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(receiptFile);
+    setPreviewUrl(objectUrl);
+
+    // Free memory when component unmounts or receiptFile changes
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [receiptFile]);
   
   const [history, setHistory] = useState<PaymentFromAPI[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -85,10 +101,64 @@ export const StudentPaymentPage: React.FC = () => {
     fetchPaymentHistory();
   }, []);
 
+  const validateAndSetFile = (file: File) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    
+    // Validate file size
+    if (file.size > maxSize) {
+      setErrorMsg(`Kích thước ảnh vượt quá giới hạn. Tối đa 5MB, ảnh của bạn ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
+      setReceiptFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Clear the input
+      }
+      return;
+    }
+    
+    // Validate file type
+    if (!allowedTypes.includes(file.type)) {
+      setErrorMsg('Định dạng tệp không hỗ trợ. Vui lòng chỉ tải lên PNG, JPG hoặc JPEG.');
+      setReceiptFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Clear the input
+      }
+      return;
+    }
+    
+    setErrorMsg(''); // Clear error if file is valid
+    setReceiptFile(file);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setReceiptFile(e.target.files[0]);
+      validateAndSetFile(e.target.files[0]);
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      validateAndSetFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const triggerFileSelect = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.btn-no-trigger')) {
+      return;
+    }
+    fileInputRef.current?.click();
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
@@ -269,28 +339,79 @@ export const StudentPaymentPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-text-main uppercase mb-1.5">Ảnh minh chứng / Biên lai chuyển khoản</label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-border-color border-dashed rounded-lg hover:border-primary/50 transition-colors relative">
-                  <div className="space-y-1 text-center">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <div className="flex text-sm text-gray-600">
-                      <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-dark focus-within:outline-none">
-                        <span>Tải ảnh lên</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="sr-only"
-                          required
-                        />
-                      </label>
-                      <p className="pl-1">hoặc kéo thả vào đây</p>
+                
+                {!receiptFile ? (
+                  <div
+                    onClick={triggerFileSelect}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer relative ${
+                      isDragActive 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border-color hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="space-y-1 text-center">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600 justify-center">
+                        <span className="font-medium text-primary hover:text-primary-dark">
+                          Tải ảnh lên
+                        </span>
+                        <p className="pl-1 text-text-body">hoặc kéo thả vào đây</p>
+                      </div>
+                      <p className="text-xs text-gray-500">Hỗ trợ PNG, JPG, JPEG tối đa 5MB</p>
                     </div>
-                    <p className="text-xs text-gray-500">Hỗ trợ PNG, JPG, JPEG tối đa 5MB</p>
-                    {receiptFile && (
-                      <p className="text-xs text-green-600 font-bold mt-2">Đã chọn: {receiptFile.name}</p>
-                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div
+                    className="mt-1 border-2 border-border-color border-solid rounded-lg p-4 bg-gray-50 flex flex-col items-center justify-center relative"
+                  >
+                    <div className="relative group max-w-full max-h-48 overflow-hidden rounded-lg border border-border-color shadow-sm mb-3 bg-white flex items-center justify-center">
+                      <img 
+                        src={previewUrl || ''} 
+                        alt="Receipt Preview" 
+                        className="max-h-48 object-contain transition-transform duration-350 ease-out group-hover:scale-102" 
+                      />
+                    </div>
+                    <p className="text-xs font-semibold text-text-main truncate max-w-xs">{receiptFile.name}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{(receiptFile.size / 1024).toFixed(1)} KB</p>
+                    
+                    <div className="flex gap-3 mt-4 w-full justify-center">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="btn-no-trigger text-xs font-bold text-primary hover:text-primary-dark border border-primary/20 hover:border-primary/50 bg-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Upload size={14} /> Thay đổi
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReceiptFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className="btn-no-trigger text-xs font-bold text-gray-600 hover:text-red-655 border border-border-color hover:border-red-200 bg-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <XCircle size={14} /> Hủy chọn
+                      </button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                )}
               </div>
 
               <Button
