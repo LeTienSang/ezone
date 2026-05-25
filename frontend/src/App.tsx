@@ -78,6 +78,7 @@ function App() {
           <Route path="courses" element={<AdminCoursesPage />} />
           <Route path="classes" element={<AdminClassesPage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Upload, CreditCard, Clock, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Upload, CreditCard, Clock, AlertCircle, CheckCircle, Loader2, XCircle } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { api } from '../../services/api';
 
@@ -9,12 +9,21 @@ interface PendingEnrollment {
   price: number;
 }
 
-interface PaymentRecord {
-  courseName: string;
+interface PaymentFromAPI {
+  id: number;
+  enrollment: {
+    id: number;
+    course: {
+      id: number;
+      courseName: string;
+    };
+  };
   amount: number;
-  date: string;
-  status: string;
+  paymentMethod: string;
   transactionId: string;
+  proofUrl: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  paymentDate: string;
 }
 
 export const StudentPaymentPage: React.FC = () => {
@@ -26,10 +35,41 @@ export const StudentPaymentPage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   
-  const [history, setHistory] = useState<PaymentRecord[]>([]);
+  const [history, setHistory] = useState<PaymentFromAPI[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  const fetchPaymentHistory = async () => {
+    try {
+      const res = await api.get<PaymentFromAPI[]>('/api/v1/payments/my');
+      setHistory(res.data);
+    } catch (err) {
+      console.error('Failed to load payment history:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const fetchPendingEnrollment = async () => {
+    try {
+      const res = await api.get<any[]>('/api/v1/enrollments/my?status=PENDING');
+      if (res.data && res.data.length > 0) {
+        const latest = res.data[0];
+        setPending({
+          id: latest.id,
+          courseName: latest.course?.courseName || '',
+          price: latest.course?.price || 0
+        });
+      } else {
+        setPending(null);
+        localStorage.removeItem('pendingEnrollment');
+      }
+    } catch (err) {
+      console.error('Failed to load pending enrollment from backend:', err);
+    }
+  };
 
   useEffect(() => {
-    // Load pending enrollment
+    // Load pending enrollment from localStorage for faster initial render
     const savedPending = localStorage.getItem('pendingEnrollment');
     if (savedPending) {
       try {
@@ -39,15 +79,10 @@ export const StudentPaymentPage: React.FC = () => {
       }
     }
 
-    // Load payment history from local storage for current student
-    const savedHistory = localStorage.getItem('studentPayments');
-    if (savedHistory) {
-      try {
-        setHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        console.error(e);
-      }
-    }
+    fetchPendingEnrollment();
+
+    // Load payment history from API
+    fetchPaymentHistory();
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +110,6 @@ export const StudentPaymentPage: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('enrollmentId', pending.id.toString());
-      formData.append('amount', pending.price.toString());
       formData.append('paymentMethod', paymentMethod);
       formData.append('transactionId', transactionId);
       formData.append('receiptImage', receiptFile);
@@ -84,27 +118,51 @@ export const StudentPaymentPage: React.FC = () => {
       
       setSuccessMsg('Gửi minh chứng thanh toán thành công! Vui lòng chờ Ban quản trị phê duyệt.');
       
-      // Update history
-      const newRecord: PaymentRecord = {
-        courseName: pending.courseName,
-        amount: pending.price,
-        date: new Date().toLocaleDateString('vi-VN'),
-        status: 'Chờ duyệt',
-        transactionId: transactionId
-      };
-      const updatedHistory = [newRecord, ...history];
-      setHistory(updatedHistory);
-      localStorage.setItem('studentPayments', JSON.stringify(updatedHistory));
-
       // Clear pending
       localStorage.removeItem('pendingEnrollment');
       setPending(null);
       setTransactionId('');
       setReceiptFile(null);
+
+      // Refresh payment history from API
+      await fetchPaymentHistory();
     } catch (err: any) {
       setErrorMsg(err.message || 'Gửi minh chứng thanh toán thất bại. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return (
+          <span className="flex items-center justify-center gap-1 text-yellow-600 bg-yellow-100 border border-yellow-200 px-2 py-1 rounded text-xs font-semibold uppercase w-fit mx-auto">
+            <Clock size={14} /> Chờ duyệt
+          </span>
+        );
+      case 'SUCCESS':
+        return (
+          <span className="flex items-center justify-center gap-1 text-green-600 bg-green-100 border border-green-200 px-2 py-1 rounded text-xs font-semibold uppercase w-fit mx-auto">
+            <CheckCircle size={14} /> Đã duyệt
+          </span>
+        );
+      case 'FAILED':
+        return (
+          <span className="flex items-center justify-center gap-1 text-red-600 bg-red-100 border border-red-200 px-2 py-1 rounded text-xs font-semibold uppercase w-fit mx-auto">
+            <XCircle size={14} /> Từ chối
+          </span>
+        );
+      default:
+        return <span className="text-xs text-gray-500">{status}</span>;
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('vi-VN');
+    } catch {
+      return dateStr;
     }
   };
 
@@ -269,23 +327,28 @@ export const StudentPaymentPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border-color">
-            {history.length === 0 ? (
+            {historyLoading ? (
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-text-body">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
+                  Đang tải lịch sử thanh toán...
+                </td>
+              </tr>
+            ) : history.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-text-body">
                   Bạn chưa có lịch sử thanh toán nào.
                 </td>
               </tr>
             ) : (
-              history.map((record, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 font-medium text-text-main">{record.courseName}</td>
-                  <td className="p-4 font-bold text-primary">{record.amount.toLocaleString('vi-VN')} VNĐ</td>
-                  <td className="p-4 text-text-body">{record.date}</td>
+              history.map((record) => (
+                <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-4 font-medium text-text-main">{record.enrollment?.course?.courseName || '—'}</td>
+                  <td className="p-4 font-bold text-primary">{Number(record.amount).toLocaleString('vi-VN')} VNĐ</td>
+                  <td className="p-4 text-text-body">{formatDate(record.paymentDate)}</td>
                   <td className="p-4 text-text-body font-mono text-xs">{record.transactionId}</td>
                   <td className="p-4 text-center">
-                    <span className="flex items-center justify-center gap-1 text-yellow-600 bg-yellow-100 border border-yellow-200 px-2 py-1 rounded text-xs font-semibold uppercase w-fit mx-auto">
-                      <Clock size={14} /> Chờ duyệt
-                    </span>
+                    {getStatusBadge(record.status)}
                   </td>
                 </tr>
               ))

@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Header } from '../../components/landing/Header';
-import { Clock, Users, BookOpen, Star, CheckCircle, X } from 'lucide-react';
+import { Clock, Users, BookOpen, X } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+
+interface SyllabusItem {
+  id: number;
+  title: string;
+  description: string;
+  sortOrder: number;
+}
 
 interface CourseCatalog {
   id: number;
@@ -15,6 +22,7 @@ interface CourseCatalog {
   duration: string;
   level: string;
   thumbnail?: string;
+  syllabus?: SyllabusItem[];
 }
 
 export const CourseDetailPage: React.FC = () => {
@@ -134,15 +142,16 @@ export const CourseDetailPage: React.FC = () => {
             
             <div className="flex flex-wrap gap-6 text-sm text-gray-300 mb-8">
               <div className="flex items-center gap-2"><Clock size={18} className="text-primary" /> {course.duration || '3 tháng'}</div>
-              <div className="flex items-center gap-2"><Users size={18} className="text-primary" /> 150+ Học viên</div>
-              <div className="flex items-center gap-2"><Star size={18} className="text-yellow-400" /> 4.9 Đánh giá</div>
+              <div className="flex items-center gap-2"><BookOpen size={18} className="text-primary" /> {course.level || 'All Levels'}</div>
             </div>
             
             <div className="flex items-center gap-4">
-              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Giảng viên" className="w-12 h-12 rounded-full border-2 border-primary" />
+              <div className="w-12 h-12 rounded-full border-2 border-primary bg-slate-700 flex items-center justify-center">
+                <Users size={22} className="text-white" />
+              </div>
               <div>
-                <p className="font-medium">Giảng viên: Giảng viên Hệ thống</p>
-                <p className="text-xs text-gray-400">Chuyên gia đào tạo tại ezone</p>
+                <p className="font-medium">Giảng viên ezone</p>
+                <p className="text-xs text-gray-400">Đội ngũ chuyên gia đào tạo</p>
               </div>
             </div>
           </div>
@@ -162,30 +171,53 @@ export const CourseDetailPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Bạn sẽ học được gì?</h2>
-              <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-                {['Nắm vững cấu trúc đề thi mới nhất', 'Phản xạ giao tiếp lưu loát, tự nhiên', 'Kỹ thuật đọc hiểu Skimming & Scanning', 'Viết luận học thuật ăn điểm cao'].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <CheckCircle size={20} className="text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">{item}</span>
-                  </div>
-                ))}
+              {/* Mô tả chi tiết khóa học */}
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Giới thiệu khóa học</h2>
+              <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm mb-12">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {course.description || 'Thông tin chi tiết khóa học sẽ được cập nhật sớm.'}
+                </p>
               </div>
-              
+
+              {/* Lộ trình học tập (Syllabus/Curriculum) */}
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Lộ trình học tập</h2>
-              <div className="space-y-4">
-                {[1, 2, 3].map(unit => (
-                  <div key={unit} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-primary transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-red-50 text-primary flex items-center justify-center font-bold">0{unit}</div>
-                      <div>
-                        <h3 className="font-bold text-gray-900">Giai đoạn {unit}: Foundation & Skills</h3>
-                        <p className="text-sm text-gray-500">4 tuần • 12 buổi học</p>
+              {course.syllabus && course.syllabus.length > 0 ? (
+                <div className="relative border-l-2 border-primary/25 ml-4 pl-6 space-y-8 mb-12">
+                  {course.syllabus.map((item, index) => (
+                    <div key={item.id} className="relative">
+                      {/* Timeline dot */}
+                      <span className="absolute -left-[39px] top-1 flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-xs font-bold ring-4 ring-white shadow-sm">
+                        {index + 1}
+                      </span>
+                      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                        <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{item.description}</p>
                       </div>
                     </div>
-                    <BookOpen size={20} className="text-gray-400" />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-12 text-center text-gray-500">
+                  Lộ trình học tập đang được cập nhật.
+                </div>
+              )}
+
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Thông tin thêm</h2>
+              <div className="space-y-4">
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+                  <Clock size={20} className="text-primary flex-shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-gray-900">Thời lượng</h3>
+                    <p className="text-sm text-gray-500">{course.duration || 'Liên hệ để biết thêm'}</p>
                   </div>
-                ))}
+                </div>
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+                  <BookOpen size={20} className="text-primary flex-shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-gray-900">Trình độ</h3>
+                    <p className="text-sm text-gray-500">{course.level || 'All Levels'}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

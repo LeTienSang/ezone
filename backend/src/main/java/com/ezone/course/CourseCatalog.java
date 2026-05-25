@@ -19,4 +19,8 @@ public class CourseCatalog {
     private String duration;
     private String level;
     private String thumbnail;
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("sortOrder ASC")
+    private java.util.List<CourseSyllabus> syllabus = new java.util.ArrayList<>();
 }

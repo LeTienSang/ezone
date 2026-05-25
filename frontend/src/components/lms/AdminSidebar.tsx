@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Book, DollarSign, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Book, DollarSign, LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const AdminSidebar: React.FC = () => {
@@ -40,6 +40,10 @@ export const AdminSidebar: React.FC = () => {
             <NavLink to="/admin/payments" className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-slate-800/80 text-white font-medium border-l-[3px] border-primary pl-2 shadow-md shadow-slate-900/20' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 pl-3'}`}>
               <DollarSign size={20} />
               Duyệt học phí
+            </NavLink>
+            <NavLink to="/admin/profile" className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-slate-800/80 text-white font-medium border-l-[3px] border-primary pl-2 shadow-md shadow-slate-900/20' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 pl-3'}`}>
+              <User size={20} />
+              Hồ sơ cá nhân
             </NavLink>
           </nav>
         </div>

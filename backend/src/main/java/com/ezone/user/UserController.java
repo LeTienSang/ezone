@@ -42,6 +42,27 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(saved, "Cập nhật hồ sơ thành công"));
     }
 
+    @Operation(summary = "Change current user's password")
+    @PatchMapping("/me/password")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequest req) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("REST request to change password for current user: {}", username);
+        userService.changePassword(username, req);
+        return ResponseEntity.ok(ApiResponse.success(null, "Đổi mật khẩu thành công"));
+    }
+
+    @Operation(summary = "Upload current user's avatar")
+    @PostMapping(value = "/me/avatar", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<User>> uploadAvatar(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("REST request to upload avatar for user: {}", username);
+        User saved = userService.uploadAvatar(username, file);
+        return ResponseEntity.ok(ApiResponse.success(saved, "Tải ảnh đại diện thành công"));
+    }
+
     @Operation(summary = "Get all users (Admin only)")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")

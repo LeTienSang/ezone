@@ -9,11 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.util.List;
 
 @Slf4j
 @Tag(name = "Payment Management", description = "Endpoints for student payment submissions and verification")
@@ -31,14 +32,25 @@ public class PaymentController {
     @PreAuthorize("hasAnyRole('STUDENT', 'GUEST')")
     public ResponseEntity<ApiResponse<Payment>> submitPayment(
             @RequestParam("enrollmentId") Integer enrollmentId,
-            @RequestParam("amount") BigDecimal amount,
             @RequestParam("paymentMethod") String paymentMethod,
             @RequestParam("transactionId") String transactionId,
             @RequestParam("receiptImage") MultipartFile receiptImage) throws IOException {
-        log.info("REST request to submit payment proof for enrollment ID: {}", enrollmentId);
-        Payment saved = paymentService.submitPayment(enrollmentId, amount, paymentMethod, transactionId, receiptImage);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("REST request to submit payment proof for enrollment ID: {} by user: {}", enrollmentId, username);
+        Payment saved = paymentService.submitPayment(username, enrollmentId, paymentMethod, transactionId, receiptImage);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(saved, "Gửi minh chứng thanh toán thành công"));
+    }
+
+    @Operation(summary = "Get current student's payment history")
+    @GetMapping("/my")
+    @PreAuthorize("hasAnyRole('STUDENT', 'GUEST')")
+    public ResponseEntity<ApiResponse<List<Payment>>> getMyPayments() {
+        String username = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        log.info("REST request to get payment history for student: {}", username);
+        List<Payment> payments = paymentService.getMyPayments(username);
+        return ResponseEntity.ok(ApiResponse.success(payments));
     }
 
     @Operation(summary = "Get paginated list of all payments (Admin only)")
