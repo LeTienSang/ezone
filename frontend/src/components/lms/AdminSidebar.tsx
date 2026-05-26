@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, Users, Book, DollarSign, LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,12 +11,12 @@ export const AdminSidebar: React.FC = () => {
   return (
     <aside className="w-64 h-screen bg-[#0f172a] border-r border-slate-800 flex flex-col fixed left-0 top-0 text-slate-300 font-sans shadow-2xl z-20">
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-10">
+        <Link to="/" className="flex items-center gap-3 mb-10 hover:opacity-80 transition-opacity">
           <div className="w-9 h-9 bg-gradient-to-br from-primary to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/30">
             <span className="text-white font-bold text-xl">e</span>
           </div>
           <span className="text-2xl font-bold text-white tracking-wide">ezone<span className="text-primary">.</span></span>
-        </div>
+        </Link>
 
         <div className="mb-8">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-3">Quản lý chung</p>

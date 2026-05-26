@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { Users, BookOpen, CheckSquare, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,12 +11,12 @@ export const TeacherSidebar: React.FC = () => {
   return (
     <aside className="w-64 h-screen bg-accent border-r border-border-color flex flex-col fixed left-0 top-0">
       <div className="p-6">
-        <div className="flex items-center gap-2 mb-8">
+        <Link to="/" className="flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
             <span className="text-white font-bold text-xl">e</span>
           </div>
           <span className="text-2xl font-bold text-primary">ezone</span>
-        </div>
+        </Link>
         
         <div className="mb-6">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Giảng viên</p>
