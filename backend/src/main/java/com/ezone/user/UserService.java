@@ -23,6 +23,73 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
+    public User createUser(CreateUserRequest req) {
+        log.info("Admin creating user: {}", req.getUsername());
+        if (userRepository.findByUsername(req.getUsername()).isPresent()) {
+            throw new BadRequestException("Tên đăng nhập đã tồn tại");
+        }
+        if (req.getEmail() != null && userRepository.findByEmail(req.getEmail()).isPresent()) {
+            throw new BadRequestException("Email đã được sử dụng");
+        }
+
+        User u = new User();
+        u.setUsername(req.getUsername());
+        u.setPassword(passwordEncoder.encode(req.getPassword()));
+        u.setEmail(req.getEmail());
+        u.setFullName(req.getFullName());
+        u.setPhone(req.getPhone());
+        try {
+            u.setRole(req.getRole() == null ? User.Role.GUEST : User.Role.valueOf(req.getRole().toUpperCase()));
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Vai trò không hợp lệ");
+        }
+        u.setIsActive(req.getIsActive() == null ? true : req.getIsActive());
+
+        User saved = userRepository.save(u);
+        log.info("User created: ID={}, username={}", saved.getId(), saved.getUsername());
+        return saved;
+    }
+
+    @Transactional
+    public User updateUserAdmin(Integer id, UpdateUserAdminRequest req) {
+        log.info("Admin updating user ID={}", id);
+        User u = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        if (req.getPassword() != null && !req.getPassword().isBlank()) {
+            u.setPassword(passwordEncoder.encode(req.getPassword()));
+        }
+        if (req.getEmail() != null) u.setEmail(req.getEmail());
+        if (req.getFullName() != null) u.setFullName(req.getFullName());
+        if (req.getPhone() != null) u.setPhone(req.getPhone());
+        if (req.getRole() != null) {
+            try {
+                u.setRole(User.Role.valueOf(req.getRole().toUpperCase()));
+            } catch (IllegalArgumentException ex) {
+                throw new BadRequestException("Vai trò không hợp lệ");
+            }
+        }
+        if (req.getIsActive() != null) u.setIsActive(req.getIsActive());
+
+        User saved = userRepository.save(u);
+        log.info("User updated ID={}", saved.getId());
+        return saved;
+    }
+
+    @Transactional
+    public User changeUserRole(Integer id, ChangeUserRoleRequest req) {
+        log.info("Admin changing role for user ID={}", id);
+        User u = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+        try {
+            u.setRole(User.Role.valueOf(req.getRole().toUpperCase()));
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Vai trò không hợp lệ");
+        }
+        User saved = userRepository.save(u);
+        log.info("User role changed ID={} -> {}", saved.getId(), saved.getRole());
+        return saved;
+    }
+
     @Transactional(readOnly = true)
     public User getMe(String username) {
         log.info("Fetching profile details for user: {}", username);

@@ -23,6 +23,71 @@ export const AdminCoursesPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+
+  // Modal states for create / edit
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const openCreate = () => {
+    setEditingCourse(null);
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (course: Course) => {
+    setEditingCourse(course);
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCourse) return;
+    try {
+      setFormLoading(true);
+      setFormError(null);
+      if (!editingCourse.id) {
+        // create
+        await api.post('/api/v1/admin/courses', {
+          courseName: editingCourse.courseName,
+          description: editingCourse.description,
+          price: editingCourse.price,
+          duration: editingCourse.duration,
+          level: editingCourse.level,
+          thumbnail: editingCourse.thumbnail,
+          isVisible: true
+        });
+      } else {
+        await api.put(`/api/v1/admin/courses/${editingCourse.id}`, {
+          courseName: editingCourse.courseName,
+          description: editingCourse.description,
+          price: editingCourse.price,
+          duration: editingCourse.duration,
+          level: editingCourse.level,
+          thumbnail: editingCourse.thumbnail,
+          isVisible: true
+        });
+      }
+      setIsModalOpen(false);
+      await fetchCourses();
+    } catch (err: any) {
+      setFormError(err.message || 'Lỗi khi lưu khóa học');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDelete = async (courseId: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) return;
+    try {
+      await api.delete(`/api/v1/admin/courses/${courseId}`);
+      await fetchCourses();
+    } catch (err: any) {
+      alert(err.message || 'Không thể xóa khóa học');
+    }
+  };
       const response = await api.get<{ content: Course[] }>('/api/v1/courses?size=100');
       setCourses(response.data.content || []);
     } catch (err: any) {
@@ -141,6 +206,53 @@ export const AdminCoursesPage: React.FC = () => {
                           onClick={() => alert('Tính năng xóa khóa học chưa được cấu hình ở Backend.')}
                           className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" 
                           title="Xóa"
+
+      {/* Create / Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/80">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <BookOpen size={20} className="text-gray-900" />
+                {editingCourse && editingCourse.id ? 'Chỉnh sửa khóa học' : 'Thêm khóa học mới'}
+              </h2>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-gray-200 rounded-full">
+                <span className="sr-only">Đóng</span>
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6">
+              {formError && <div className="mb-3 text-sm text-red-600">{formError}</div>}
+              <form onSubmit={handleSave} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Tên khóa học *</label>
+                  <input value={editingCourse?.courseName || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), courseName: e.target.value }))}
+                    required className="w-full border rounded px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Mô tả</label>
+                  <textarea value={editingCourse?.description || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), description: e.target.value }))}
+                    className="w-full border rounded px-3 py-2" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input type="number" step="1000" value={editingCourse?.price || 0} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), price: Number(e.target.value) }))} className="w-full border rounded px-3 py-2" placeholder="Giá (VND)" />
+                  <input value={editingCourse?.duration || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), duration: e.target.value }))} className="w-full border rounded px-3 py-2" placeholder="Thời lượng" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input value={editingCourse?.level || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), level: e.target.value }))} className="w-full border rounded px-3 py-2" placeholder="Cấp độ" />
+                  <input value={editingCourse?.thumbnail || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), thumbnail: e.target.value }))} className="w-full border rounded px-3 py-2" placeholder="URL ảnh" />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={formLoading}>Hủy</Button>
+                  <Button type="submit" variant="primary" disabled={formLoading}>{formLoading ? 'Đang lưu...' : 'Lưu'}</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
                         >
                           <Trash2 size={16} />
                         </button>
