@@ -18,20 +18,27 @@ export const AdminCoursesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
   // Modal states for create / edit
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get<{ content: Course[] }>('/api/v1/courses?size=100');
+      setCourses(response.data.content || []);
+    } catch (err: any) {
+      setError(err.message || 'Không thể tải danh sách khóa học');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openCreate = () => {
-    setEditingCourse(null);
+    setEditingCourse({ id: 0, courseName: '', description: '', price: 0, duration: '', level: '', thumbnail: '' });
     setFormError(null);
     setIsModalOpen(true);
   };
@@ -44,11 +51,11 @@ export const AdminCoursesPage: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingCourse) return;
     try {
       setFormLoading(true);
       setFormError(null);
-      if (!editingCourse.id) {
+      if (!editingCourse) return;
+      if (editingCourse.id === 0) {
         // create
         await api.post('/api/v1/admin/courses', {
           courseName: editingCourse.courseName,
@@ -88,14 +95,6 @@ export const AdminCoursesPage: React.FC = () => {
       alert(err.message || 'Không thể xóa khóa học');
     }
   };
-      const response = await api.get<{ content: Course[] }>('/api/v1/courses?size=100');
-      setCourses(response.data.content || []);
-    } catch (err: any) {
-      setError(err.message || 'Không thể tải danh sách khóa học');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchCourses();
@@ -120,7 +119,7 @@ export const AdminCoursesPage: React.FC = () => {
         <Button 
           variant="primary" 
           className="bg-gray-900 hover:bg-gray-800 flex items-center gap-2"
-          onClick={() => alert('Chức năng thêm khóa học mới chưa được mở ở Backend. Các khóa học hiện tại được quản lý thông qua cơ sở dữ liệu hệ thống.')}
+          onClick={openCreate}
         >
           <Plus size={18} /> Thêm khóa học
         </Button>
@@ -196,7 +195,7 @@ export const AdminCoursesPage: React.FC = () => {
                     <td className="p-4 pr-6 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button 
-                          onClick={() => alert('Tính năng chỉnh sửa khóa học sẽ được cập nhật trong phiên bản tiếp theo.')}
+                          onClick={() => openEdit(course)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
                           title="Chỉnh sửa"
                         >
@@ -205,8 +204,11 @@ export const AdminCoursesPage: React.FC = () => {
                         <button 
                           onClick={() => alert('Tính năng xóa khóa học chưa được cấu hình ở Backend.')}
                           className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" 
-                          title="Xóa"
+                          title="Xóa">
 
+      
+                          <Trash2 size={16} />
+                        </button>
       {/* Create / Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -253,9 +255,6 @@ export const AdminCoursesPage: React.FC = () => {
           </div>
         </div>
       )}
-                        >
-                          <Trash2 size={16} />
-                        </button>
                       </div>
                     </td>
                   </tr>
