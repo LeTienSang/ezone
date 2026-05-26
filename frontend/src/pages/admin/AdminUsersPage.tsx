@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, ShieldAlert, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { Search, ShieldAlert, UserCheck, UserX, Loader2, Plus, Edit } from 'lucide-react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
 
@@ -22,6 +22,10 @@ export const AdminUsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -40,6 +44,52 @@ export const AdminUsersPage: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const openCreate = () => {
+    setEditingUser({ username: '', password: '', email: '', fullName: '', phone: '', role: 'STUDENT', isActive: true });
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (u: any) => {
+    setEditingUser({ ...u, password: '' });
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    try {
+      setFormLoading(true);
+      if (!editingUser.id) {
+        await api.post('/api/v1/users', {
+          username: editingUser.username,
+          password: editingUser.password,
+          email: editingUser.email,
+          fullName: editingUser.fullName,
+          phone: editingUser.phone,
+          role: editingUser.role,
+          isActive: editingUser.isActive
+        });
+      } else {
+        await api.put(`/api/v1/users/${editingUser.id}`, {
+          password: editingUser.password || undefined,
+          email: editingUser.email,
+          fullName: editingUser.fullName,
+          phone: editingUser.phone,
+          role: editingUser.role,
+          isActive: editingUser.isActive
+        });
+      }
+      setIsModalOpen(false);
+      await fetchUsers();
+    } catch (err: any) {
+      setFormError(err.message || 'Lỗi khi lưu người dùng');
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   const handleToggleActive = async (id: number) => {
     try {
@@ -85,6 +135,11 @@ export const AdminUsersPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý người dùng</h1>
           <p className="text-gray-500 text-sm mt-1">Phân quyền và quản lý tài khoản trên toàn bộ hệ thống.</p>
+        </div>
+        <div>
+          <Button variant="primary" onClick={openCreate} className="flex items-center gap-2">
+            <Plus size={16} /> Thêm người dùng
+          </Button>
         </div>
       </div>
 
@@ -192,23 +247,28 @@ export const AdminUsersPage: React.FC = () => {
                           <Loader2 size={16} />
                         </div>
                       ) : (
-                        user.isActive ? (
-                          <button 
-                            onClick={() => handleToggleActive(user.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" 
-                            title="Khóa tài khoản"
-                          >
-                            <ShieldAlert size={18} />
+                        <>
+                          <button onClick={() => openEdit(user)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all mr-2" title="Chỉnh sửa">
+                            <Edit size={18} />
                           </button>
-                        ) : (
-                          <button 
-                            onClick={() => handleToggleActive(user.id)}
-                            className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" 
-                            title="Mở khóa tài khoản"
-                          >
-                            <UserCheck size={18} />
-                          </button>
-                        )
+                          {user.isActive ? (
+                            <button 
+                              onClick={() => handleToggleActive(user.id)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" 
+                              title="Khóa tài khoản"
+                            >
+                              <ShieldAlert size={18} />
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleToggleActive(user.id)}
+                              className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" 
+                              title="Mở khóa tài khoản"
+                            >
+                              <UserCheck size={18} />
+                            </button>
+                          )}
+                        </>
                       )}
                     </td>
                   </tr>
@@ -218,6 +278,59 @@ export const AdminUsersPage: React.FC = () => {
           )}
         </div>
       </div>
+        {/* Create / Edit User Modal */}
+        {isModalOpen && editingUser && (
+          <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-2xl w-full max-w-md overflow-hidden animate-slideUp">
+              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/80">
+                <h2 className="text-lg font-bold text-gray-900">{editingUser.id ? 'Chỉnh sửa người dùng' : 'Thêm người dùng'}</h2>
+                <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-gray-200 rounded-full">✕</button>
+              </div>
+              <div className="p-6">
+                {formError && <div className="mb-3 text-sm text-red-600">{formError}</div>}
+                <form onSubmit={handleSave} className="space-y-3">
+                  {!editingUser.id && (
+                    <div>
+                      <label className="block text-xs font-semibold">Tài khoản (username) *</label>
+                      <input required value={editingUser.username} onChange={e => setEditingUser((p:any)=>({...p, username: e.target.value}))} className="w-full border rounded px-3 py-2" />
+                    </div>
+                  )}
+                  {!editingUser.id && (
+                    <div>
+                      <label className="block text-xs font-semibold">Mật khẩu *</label>
+                      <input required type="password" value={editingUser.password} onChange={e => setEditingUser((p:any)=>({...p, password: e.target.value}))} className="w-full border rounded px-3 py-2" />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-semibold">Họ & Tên</label>
+                    <input value={editingUser.fullName} onChange={e => setEditingUser((p:any)=>({...p, fullName: e.target.value}))} className="w-full border rounded px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold">Email</label>
+                    <input value={editingUser.email} onChange={e => setEditingUser((p:any)=>({...p, email: e.target.value}))} className="w-full border rounded px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold">Số điện thoại</label>
+                    <input value={editingUser.phone} onChange={e => setEditingUser((p:any)=>({...p, phone: e.target.value}))} className="w-full border rounded px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold">Vai trò</label>
+                    <select value={editingUser.role} onChange={e => setEditingUser((p:any)=>({...p, role: e.target.value}))} className="w-full border rounded px-3 py-2">
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="TEACHER">TEACHER</option>
+                      <option value="STUDENT">STUDENT</option>
+                      <option value="GUEST">GUEST</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={formLoading}>Hủy</Button>
+                    <Button type="submit" variant="primary" disabled={formLoading}>{formLoading ? 'Đang lưu...' : 'Lưu'}</Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

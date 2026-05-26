@@ -85,4 +85,31 @@ public class UserController {
         String msg = saved.getIsActive() ? "Mở khóa tài khoản thành công" : "Khóa tài khoản thành công";
         return ResponseEntity.ok(ApiResponse.success(saved, msg));
     }
+
+    @Operation(summary = "Create a new user (Admin only)")
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<User>> createUser(@Valid @RequestBody CreateUserRequest req) {
+        log.info("REST request to create user: {}", req.getUsername());
+        User saved = userService.createUser(req);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(ApiResponse.success(saved, "Tạo người dùng thành công"));
+    }
+
+    @Operation(summary = "Update a user (Admin only)")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable("id") Integer id, @Valid @RequestBody UpdateUserAdminRequest req) {
+        log.info("REST request to update user ID={}", id);
+        User saved = userService.updateUserAdmin(id, req);
+        return ResponseEntity.ok(ApiResponse.success(saved, "Cập nhật người dùng thành công"));
+    }
+
+    @Operation(summary = "Change user role (Admin only)")
+    @PatchMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<User>> changeRole(@PathVariable("id") Integer id, @Valid @RequestBody ChangeUserRoleRequest req) {
+        log.info("REST request to change role for user ID={}", id);
+        User saved = userService.changeUserRole(id, req);
+        return ResponseEntity.ok(ApiResponse.success(saved, "Cập nhật vai trò thành công"));
+    }
 }

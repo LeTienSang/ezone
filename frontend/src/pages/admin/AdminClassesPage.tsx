@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Users, Plus, Eye, Loader2, X, Calendar, BookOpen, Award } from 'lucide-react';
+import { Search, Users, Plus, Loader2, X, Calendar, BookOpen, Video, RefreshCw } from 'lucide-react';
 import { api } from '../../services/api';
 import { Button } from '../../components/common/Button';
 
@@ -34,11 +34,23 @@ interface ClassEntity {
   students: any[];
 }
 
+interface ClassSession {
+  id: number;
+  title: string;
+  sessionDate: string;
+  room?: string | null;
+  content?: string | null;
+}
+
 export const AdminClassesPage: React.FC = () => {
   const [classes, setClasses] = useState<ClassEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [selectedClassSessions, setSelectedClassSessions] = useState<ClassSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,6 +66,38 @@ export const AdminClassesPage: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [maxStudents, setMaxStudents] = useState(20);
+
+  const formatDateTime = (value: string) => {
+    if (!value) return '';
+    try {
+      return new Date(value).toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return value;
+    }
+  };
+
+  const loadClassSessions = async (classId: number) => {
+    try {
+      setSessionsLoading(true);
+      setSessionsError(null);
+      const response = await api.get<ClassSession[]>(`/api/v1/classes/${classId}/sessions`);
+      const sortedSessions = [...(response.data || [])].sort(
+        (a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
+      );
+      setSelectedClassSessions(sortedSessions);
+    } catch (err: any) {
+      setSelectedClassSessions([]);
+      setSessionsError(err.message || 'Không thể tải danh sách buổi học');
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
 
   const fetchClasses = async () => {
     try {
@@ -107,7 +151,7 @@ export const AdminClassesPage: React.FC = () => {
 
     try {
       setSubmitError(null);
-      await api.post('/api/v1/classes', {
+      const response = await api.post<ClassEntity>('/api/v1/classes', {
         className,
         courseId: parseInt(courseId),
         instructorId: parseInt(instructorId),
@@ -116,7 +160,13 @@ export const AdminClassesPage: React.FC = () => {
         maxStudents
       });
       setIsModalOpen(false);
-      fetchClasses();
+      await fetchClasses();
+
+      const createdClassId = response.data?.id;
+      if (createdClassId) {
+        setSelectedClassId(createdClassId);
+        await loadClassSessions(createdClassId);
+      }
     } catch (err: any) {
       setSubmitError(err.message || 'Không thể tạo lớp học mới');
     }
@@ -140,6 +190,8 @@ export const AdminClassesPage: React.FC = () => {
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-500 border border-gray-100">{status}</span>;
     }
   };
+
+  const selectedClass = classes.find(cls => cls.id === selectedClassId) || null;
 
   return (
     <div className="animate-fadeIn">
@@ -200,7 +252,14 @@ export const AdminClassesPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-150">
                 {filteredClasses.map((cls) => (
-                  <tr key={cls.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr
+                    key={cls.id}
+                    className={`hover:bg-gray-50/50 transition-colors cursor-pointer ${selectedClassId === cls.id ? 'bg-gray-50' : ''}`}
+                    onClick={() => {
+                      setSelectedClassId(cls.id);
+                      loadClassSessions(cls.id);
+                    }}
+                  >
                     <td className="p-4 pl-6 font-bold text-gray-900">{cls.className}</td>
                     <td className="p-4 text-gray-700">{cls.course?.courseName}</td>
                     <td className="p-4 text-gray-600 font-medium">{cls.instructor?.user?.fullName || 'N/A'}</td>
@@ -221,6 +280,83 @@ export const AdminClassesPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {selectedClass && (
+        <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-gray-50/50">
+            <div>
+              <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <Calendar size={18} className="text-gray-900" />
+                Buổi học của {selectedClass.className}
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedClass.course?.courseName} · {selectedClass.startDate} ~ {selectedClass.endDate}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => loadClassSessions(selectedClass.id)}
+              className="h-10 inline-flex items-center gap-2"
+              disabled={sessionsLoading}
+            >
+              <RefreshCw size={14} className={sessionsLoading ? 'animate-spin' : ''} />
+              Tải lại buổi học
+            </Button>
+          </div>
+
+          <div className="p-4">
+            {sessionsError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-100">
+                {sessionsError}
+              </div>
+            )}
+
+            {sessionsLoading ? (
+              <div className="flex items-center justify-center py-10 gap-3 text-gray-500 text-sm">
+                <Loader2 className="animate-spin" size={20} />
+                Đang tải danh sách buổi học...
+              </div>
+            ) : selectedClassSessions.length === 0 ? (
+              <div className="text-center py-10 text-sm text-gray-500">
+                Lớp này chưa có buổi học nào.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {selectedClassSessions.map((session) => (
+                  <div key={session.id} className="rounded-xl border border-gray-200 p-4 bg-white shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-gray-900">{session.title}</p>
+                        <p className="mt-1 text-xs text-gray-500">{formatDateTime(session.sessionDate)}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-700">
+                        <Video size={12} />
+                        Buổi học
+                      </span>
+                    </div>
+
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-gray-500">Phòng học</span>
+                        <span className="font-medium text-gray-900 text-right">
+                          {session.room?.trim() ? session.room : 'Chưa cập nhật'}
+                        </span>
+                      </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="text-gray-500">Nội dung</span>
+                        <span className="font-medium text-gray-900 text-right max-w-[60%]">
+                          {session.content?.trim() ? session.content : 'Chưa có mô tả'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Create Class Modal */}
       {isModalOpen && (
