@@ -19,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 
 @Slf4j
@@ -80,6 +82,34 @@ public class ClassroomService {
         newClass.setStatus(ClassStatus.UPCOMING);
 
         ClassEntity saved = classRepository.save(newClass);
+
+        // Bootstrap weekly sessions between start and end date (inclusive).
+        try {
+            List<ClassSession> sessions = new ArrayList<>();
+            LocalDate d = saved.getStartDate();
+            int idx = 1;
+            while (!d.isAfter(saved.getEndDate())) {
+                ClassSession s = new ClassSession();
+                s.setClassEntity(saved);
+                s.setTitle("Buổi " + idx + ": " + saved.getClassName());
+                // default session time: 09:00 local
+                s.setSessionDate(LocalDateTime.of(d.getYear(), d.getMonth(), d.getDayOfMonth(), 9, 0));
+                s.setRoom(null);
+                s.setContent(null);
+                sessions.add(s);
+
+                d = d.plusDays(7);
+                idx++;
+            }
+
+            if (!sessions.isEmpty()) {
+                sessionRepository.saveAll(sessions);
+                log.info("Generated {} sessions for class ID={}", sessions.size(), saved.getId());
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to auto-generate sessions for class ID={}: {}", saved.getId(), ex.getMessage());
+        }
+
         log.info("Class created successfully: ID={}, name={}", saved.getId(), saved.getClassName());
         return saved;
     }
