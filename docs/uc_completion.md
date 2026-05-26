@@ -54,6 +54,88 @@ Theo audit code-level giữa [docs/PRD.md](PRD.md) và implementation hiện t�
 5. **UC19 — Quản lý người dùng:** thêm create/edit/role change trong admin.
 6. **UC24 — Thống kê báo cáo:** tách analytics endpoint riêng, thay vì chỉ tính toán phía client.
 
+## Backlog kỹ thuật chi tiết
+
+### UC02 — Đăng xuất
+
+**Mục tiêu:** logout có hiệu lực thật trên toàn hệ thống, không chỉ xóa token ở client.
+
+- **Backend:** thêm cơ chế JWT blacklist/revocation hoặc token versioning theo user.
+- **Backend:** cập nhật filter/security layer để từ chối token đã bị revoke.
+- **Frontend:** giữ luồng xóa token và redirect, nhưng gọi API logout trước khi clear session.
+- **Kiểm thử:** verify token cũ không còn truy cập được sau logout.
+
+**Done when:** user logout xong thì JWT cũ bị vô hiệu hóa và request tiếp theo trả 401/403.
+
+### UC14 — Quản lý buổi học
+
+**Mục tiêu:** teacher/admin chỉnh sửa session đầy đủ từ UI.
+
+- **Backend:** xác nhận API update session hỗ trợ đủ trường `title`, `content`, `room`, `meetingLink`.
+- **Backend:** validate quyền sửa theo role/class ownership.
+- **Frontend:** bổ sung form edit session trong `TeacherClassDetailPage`.
+- **Frontend:** cho phép lưu nội dung buổi học và link học trực tuyến thay vì hard-code.
+- **Kiểm thử:** sửa session từ UI và reload vẫn thấy dữ liệu mới.
+
+**Done when:** session có thể tạo/sửa/xem đồng bộ giữa backend và frontend.
+
+### UC19 — Quản lý người dùng
+
+**Mục tiêu:** admin quản lý user đầy đủ: tạo, sửa, khóa/mở, đổi role.
+
+- **Backend:** thêm endpoint tạo user cho admin.
+- **Backend:** thêm endpoint update user profile/role/status.
+- **Backend:** chuẩn hóa DTO cho create/edit để tránh lộ field nội bộ.
+- **Frontend:** thêm modal/form create user và edit user.
+- **Frontend:** thêm thao tác đổi role, khóa/mở tài khoản trong `AdminUsersPage`.
+- **Kiểm thử:** admin tạo user mới, sửa role, khóa tài khoản và thao tác phản ánh ngay trên list.
+
+**Done when:** toàn bộ CRUD quản trị user hoạt động từ UI.
+
+### UC20 — Quản lý khóa học
+
+**Mục tiêu:** admin quản lý course catalog với CRUD đầy đủ.
+
+- **Backend:** thêm POST/PUT/DELETE cho course catalog.
+- **Backend:** validate input học phí, mô tả, trạng thái active.
+- **Frontend:** thay các alert stub trong `AdminCoursesPage` bằng form thực.
+- **Frontend:** hỗ trợ create/edit/delete và refresh list sau khi lưu.
+- **Kiểm thử:** thêm course mới hiển thị ở landing page và admin list.
+
+**Done when:** admin có thể quản lý course end-to-end mà không cần sửa DB thủ công.
+
+### UC21 — Quản lý lớp học
+
+**Mục tiêu:** tạo lớp xong thì hệ thống sinh session mặc định tự động.
+
+- **Backend:** bổ sung service sinh `CLASS_SESSIONS` mặc định ngay sau khi tạo `CLASS`.
+- **Backend:** chuẩn hóa số buổi, khung ngày học, và rule tạo session theo course/class.
+- **Frontend:** cập nhật luồng tạo lớp để hiển thị session được sinh ra sau create.
+- **Kiểm thử:** tạo lớp mới phải có danh sách session mặc định ngay lập tức.
+
+**Done when:** class creation không cần bước tay để tạo session nền.
+
+### UC24 — Thống kê báo cáo
+
+**Mục tiêu:** dashboard lấy số liệu từ backend analytics thay vì tổng hợp tạm ở client.
+
+- **Backend:** tạo endpoint thống kê riêng cho revenue, new students, attendance, payment status.
+- **Backend:** định nghĩa response DTO ổn định cho dashboard cards/charts.
+- **Frontend:** đổi `AdminDashboardPage` sang fetch dữ liệu từ API.
+- **Frontend:** xử lý loading/empty/error state cho dashboard.
+- **Kiểm thử:** dashboard hiển thị số liệu thật từ backend, không phụ thuộc mock/local aggregate.
+
+**Done when:** toàn bộ KPI dashboard lấy từ API tổng hợp riêng.
+
+## Thứ tự triển khai đề xuất
+
+1. **UC21** — vì ảnh hưởng trực tiếp đến luồng tạo lớp và dữ liệu LMS.
+2. **UC20** — để admin có thể quản lý danh mục khóa học thật.
+3. **UC19** — hoàn thiện quản trị người dùng.
+4. **UC14** — đồng bộ session editing cho teacher.
+5. **UC24** — chuyển dashboard sang analytics backend.
+6. **UC02** — làm sạch session/logout semantics sau cùng.
+
 ## Gợi ý hoàn thiện
 
 - Nếu mục tiêu là **100% use case theo PRD**, nên ưu tiên hoàn tất 6 mục partial ở trên.
