@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, FileText, CheckSquare, Plus, Video, Loader2, ArrowLeft, Trash2, Calendar, Send, Save, AlertCircle } from 'lucide-react';
+import { Users, FileText, CheckSquare, Plus, Video, Loader2, ArrowLeft, Trash2, Calendar, Send, Save, AlertCircle, Pencil } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { api } from '../../services/api';
 
@@ -87,6 +87,13 @@ export const TeacherClassDetailPage: React.FC = () => {
   const [assignmentDueDate, setAssignmentDueDate] = useState('');
   const [assignmentMaxScore, setAssignmentMaxScore] = useState(10);
   const [creatingAssignment, setCreatingAssignment] = useState(false);
+
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
+  const [sessionTitle, setSessionTitle] = useState('');
+  const [sessionContent, setSessionContent] = useState('');
+  const [sessionRoom, setSessionRoom] = useState('');
+  const [savingSession, setSavingSession] = useState(false);
 
   // General state
   const [loading, setLoading] = useState(true);
@@ -308,6 +315,46 @@ export const TeacherClassDetailPage: React.FC = () => {
     }
   };
 
+  const openSessionEditModal = () => {
+    if (!selectedSessionId) return;
+
+    const session = sessions.find((item) => item.id === selectedSessionId);
+    if (!session) return;
+
+    setEditingSessionId(session.id);
+    setSessionTitle(session.title || '');
+    setSessionContent(session.content || '');
+    setSessionRoom(session.room || '');
+    setShowSessionModal(true);
+  };
+
+  const handleUpdateSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !editingSessionId || !sessionTitle.trim()) return;
+
+    try {
+      setSavingSession(true);
+      setError('');
+      setSuccessMsg('');
+
+      await api.put(`/api/v1/classes/${id}/sessions/${editingSessionId}`, {
+        title: sessionTitle.trim(),
+        content: sessionContent.trim(),
+        room: sessionRoom.trim(),
+      });
+
+      await fetchClassDetails();
+      setSuccessMsg('Cập nhật buổi học thành công!');
+      setShowSessionModal(false);
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Lỗi khi cập nhật buổi học');
+    } finally {
+      setSavingSession(false);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     try {
@@ -336,7 +383,7 @@ export const TeacherClassDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[400px] flex flex-col justify-center items-center">
+      <div className="min-h-100 flex flex-col justify-center items-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin mb-2" />
         <p className="text-text-body font-medium">Đang tải chi tiết lớp học...</p>
       </div>
@@ -364,7 +411,7 @@ export const TeacherClassDetailPage: React.FC = () => {
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r text-red-700 flex items-start gap-2">
-          <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+          <AlertCircle size={18} className="mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -409,17 +456,28 @@ export const TeacherClassDetailPage: React.FC = () => {
             {sessions.length > 0 ? (
               <div className="space-y-1">
                 <label className="text-xs text-text-body font-semibold">Chọn buổi học:</label>
-                <select 
-                  value={selectedSessionId} 
-                  onChange={(e) => setSelectedSessionId(e.target.value ? parseInt(e.target.value) : '')}
-                  className="w-full border border-border-color rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white text-text-main font-medium"
-                >
-                  {sessions.map((sess) => (
-                    <option key={sess.id} value={sess.id}>
-                      {sess.title} ({formatDate(sess.sessionDate)})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select 
+                    value={selectedSessionId} 
+                    onChange={(e) => setSelectedSessionId(e.target.value ? parseInt(e.target.value) : '')}
+                    className="flex-1 border border-border-color rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white text-text-main font-medium"
+                  >
+                    {sessions.map((sess) => (
+                      <option key={sess.id} value={sess.id}>
+                        {sess.title} ({formatDate(sess.sessionDate)})
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="whitespace-nowrap flex items-center gap-2"
+                    onClick={openSessionEditModal}
+                    disabled={!selectedSessionId}
+                  >
+                    <Pencil size={16} /> Sửa buổi học
+                  </Button>
+                </div>
               </div>
             ) : (
               <p className="text-xs text-red-500 font-medium">Lớp học chưa được cấu hình buổi học nào.</p>
@@ -524,7 +582,7 @@ export const TeacherClassDetailPage: React.FC = () => {
                         rel="noreferrer" 
                         className="flex items-start gap-3 flex-1 min-w-0"
                       >
-                        <div className="bg-red-100 text-primary w-10 h-10 rounded flex items-center justify-center font-bold text-xs flex-shrink-0">
+                        <div className="bg-red-100 text-primary w-10 h-10 rounded flex items-center justify-center font-bold text-xs shrink-0">
                           {mat.materialType}
                         </div>
                         <div className="min-w-0">
@@ -609,17 +667,6 @@ export const TeacherClassDetailPage: React.FC = () => {
             <form onSubmit={handleUploadMaterial} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-text-main mb-1">Tên tài liệu *</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Ví dụ: Slide Lecture 1, Syllabus IELTS..."
-                  value={materialTitle}
-                  onChange={(e) => setMaterialTitle(e.target.value)}
-                  className="w-full border border-border-color rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white text-text-main font-medium"
-                />
-              </div>
-
-              <div>
                 <label className="block text-sm font-semibold text-text-main mb-1">Loại tài liệu</label>
                 <select 
                   value={materialType}
@@ -737,6 +784,66 @@ export const TeacherClassDetailPage: React.FC = () => {
                   disabled={creatingAssignment}
                 >
                   {creatingAssignment ? <Loader2 size={16} className="animate-spin" /> : 'Giao bài'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSessionModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 border border-border-color shadow-2xl">
+            <h3 className="text-xl font-bold text-text-main mb-4">Sửa buổi học</h3>
+
+            <form onSubmit={handleUpdateSession} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-text-main mb-1">Tiêu đề buổi học *</label>
+                <input
+                  type="text"
+                  required
+                  value={sessionTitle}
+                  onChange={(e) => setSessionTitle(e.target.value)}
+                  className="w-full border border-border-color rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white text-text-main font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-text-main mb-1">Nội dung buổi học</label>
+                <textarea
+                  value={sessionContent}
+                  onChange={(e) => setSessionContent(e.target.value)}
+                  rows={3}
+                  className="w-full border border-border-color rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white text-text-main font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-text-main mb-1">Phòng học / link lớp</label>
+                <input
+                  type="text"
+                  value={sessionRoom}
+                  onChange={(e) => setSessionRoom(e.target.value)}
+                  placeholder="Ví dụ: Room A1, Google Meet link..."
+                  className="w-full border border-border-color rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white text-text-main font-medium"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowSessionModal(false)}
+                  disabled={savingSession}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={savingSession}
+                >
+                  {savingSession ? <Loader2 size={16} className="animate-spin" /> : 'Lưu buổi học'}
                 </Button>
               </div>
             </form>

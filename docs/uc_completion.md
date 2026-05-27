@@ -149,3 +149,6 @@ Backend hiện có lỗi khởi động liên quan đến MySQL credentials:
 - `Access denied for user 'root'@'localhost' (using password: YES)`
 
 Điều này không làm thay đổi audit use case, nhưng cần xử lý để test end-to-end.
+
+## Ghi chú hoàn thành
+Đã hoàn thành 100
