@@ -11,4 +11,6 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Integer> {
 
     @Query("SELECT c FROM ClassEntity c WHERE c.instructor.user.username = :username")
     List<ClassEntity> findClassesForTeacher(@Param("username") String username);
+
+    long countByStatus(ClassStatus status);
 }

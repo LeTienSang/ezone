@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CourseCatalogRepository extends JpaRepository<CourseCatalog, Integer> {
     Page<CourseCatalog> findAllByIsVisibleTrue(Pageable pageable);
+
+    long count();
 }

@@ -229,21 +229,21 @@ export const AdminCoursesPage: React.FC = () => {
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">Tên khóa học *</label>
-                  <input value={editingCourse?.courseName || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), courseName: e.target.value }))}
+                  <input value={editingCourse?.courseName || ''} onChange={e => setEditingCourse(prev => prev ? ({ ...prev, courseName: e.target.value }) : prev)}
                     required className="w-full border rounded px-3 py-2" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">Mô tả</label>
-                  <textarea value={editingCourse?.description || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), description: e.target.value }))}
+                  <textarea value={editingCourse?.description || ''} onChange={e => setEditingCourse(prev => prev ? ({ ...prev, description: e.target.value }) : prev)}
                     className="w-full border rounded px-3 py-2" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="number" step="1000" value={editingCourse?.price || 0} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), price: Number(e.target.value) }))} className="w-full border rounded px-3 py-2" placeholder="Giá (VND)" />
-                  <input value={editingCourse?.duration || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), duration: e.target.value }))} className="w-full border rounded px-3 py-2" placeholder="Thời lượng" />
+                  <input type="number" step="1000" value={editingCourse?.price || 0} onChange={e => setEditingCourse(prev => prev ? ({ ...prev, price: Number(e.target.value) }) : prev)} className="w-full border rounded px-3 py-2" placeholder="Giá (VND)" />
+                  <input value={editingCourse?.duration || ''} onChange={e => setEditingCourse(prev => prev ? ({ ...prev, duration: e.target.value }) : prev)} className="w-full border rounded px-3 py-2" placeholder="Thời lượng" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <input value={editingCourse?.level || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), level: e.target.value }))} className="w-full border rounded px-3 py-2" placeholder="Cấp độ" />
-                  <input value={editingCourse?.thumbnail || ''} onChange={e => setEditingCourse(prev => ({ ...(prev || {}), thumbnail: e.target.value }))} className="w-full border rounded px-3 py-2" placeholder="URL ảnh" />
+                  <input value={editingCourse?.level || ''} onChange={e => setEditingCourse(prev => prev ? ({ ...prev, level: e.target.value }) : prev)} className="w-full border rounded px-3 py-2" placeholder="Cấp độ" />
+                  <input value={editingCourse?.thumbnail || ''} onChange={e => setEditingCourse(prev => prev ? ({ ...prev, thumbnail: e.target.value }) : prev)} className="w-full border rounded px-3 py-2" placeholder="URL ảnh" />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
