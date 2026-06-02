@@ -15,4 +15,5 @@ public class AssignmentResponse {
     private LocalDateTime dueDate;
     private Integer maxScore;
     private String submissionStatus; // "submitted" or "pending"
+    private SubmissionResponse submission;
 }

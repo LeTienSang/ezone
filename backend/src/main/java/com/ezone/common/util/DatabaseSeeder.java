@@ -53,19 +53,39 @@ public class DatabaseSeeder implements CommandLineRunner {
                 CourseCatalog c1 = allCourses.stream()
                         .filter(c -> c.getCourseName().contains("IELTS"))
                         .findFirst().orElse(null);
-                if (c1 != null && c1.getSyllabus().isEmpty()) {
-                    log.info("Syllabus is empty, seeding syllabus data dynamically...");
-                    c1.getSyllabus().add(new CourseSyllabus(null, c1, "Chặng 1: IELTS Reading & Listening Foundation", "Xây dựng nền tảng từ vựng, ngữ pháp và phát âm cần thiết cho IELTS.", 1));
-                    c1.getSyllabus().add(new CourseSyllabus(null, c1, "Chặng 2: Kỹ thuật xử lý các dạng bài thi", "Luyện tập các phương pháp và chiến thuật làm bài cho cả 4 kỹ năng Listening, Reading, Writing, Speaking.", 2));
-                    c1.getSyllabus().add(new CourseSyllabus(null, c1, "Chặng 3: Luyện đề và bứt phá Band điểm 7.5+", "Cọ xát với đề thi thật gần đây nhất, sửa bài chi tiết cùng giảng viên chuyên gia.", 3));
-                    courseRepository.save(c1);
-                    
-                    CourseCatalog c2 = allCourses.stream()
+                if (c1 != null) {
+                    boolean changed = false;
+                    if ("https://images.unsplash.com/photo-1546410531-ea4cea477149?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80".equals(c1.getThumbnail()) || c1.getThumbnail() == null || c1.getThumbnail().isEmpty() || c1.getThumbnail().contains("ielts-75.jpg")) {
+                        c1.setThumbnail("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80");
+                        changed = true;
+                    }
+                    if (c1.getSyllabus().isEmpty()) {
+                        log.info("Syllabus is empty, seeding syllabus data dynamically...");
+                        c1.getSyllabus().add(new CourseSyllabus(null, c1, "Chặng 1: IELTS Reading & Listening Foundation", "Xây dựng nền tảng từ vựng, ngữ pháp và phát âm cần thiết cho IELTS.", 1));
+                        c1.getSyllabus().add(new CourseSyllabus(null, c1, "Chặng 2: Kỹ thuật xử lý các dạng bài thi", "Luyện tập các phương pháp và chiến thuật làm bài cho cả 4 kỹ năng Listening, Reading, Writing, Speaking.", 2));
+                        c1.getSyllabus().add(new CourseSyllabus(null, c1, "Chặng 3: Luyện đề và bứt phá Band điểm 7.5+", "Cọ xát với đề thi thật gần đây nhất, sửa bài chi tiết cùng giảng viên chuyên gia.", 3));
+                        changed = true;
+                    }
+                    if (changed) {
+                        courseRepository.save(c1);
+                    }
+                }
+                
+                CourseCatalog c2 = allCourses.stream()
                         .filter(c -> c.getCourseName().contains("TOEIC"))
                         .findFirst().orElse(null);
-                    if (c2 != null) {
+                if (c2 != null) {
+                    boolean changed = false;
+                    if (c2.getThumbnail() == null || c2.getThumbnail().isEmpty() || c2.getThumbnail().contains("toeic-750.jpg")) {
+                        c2.setThumbnail("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+                        changed = true;
+                    }
+                    if (c2.getSyllabus().isEmpty()) {
                         c2.getSyllabus().add(new CourseSyllabus(null, c2, "Phần 1: Grammar & Vocabulary Booster", "Củng cố lại toàn bộ các chủ điểm ngữ pháp cốt lõi và từ vựng thông dụng trong bài thi TOEIC mới.", 1));
                         c2.getSyllabus().add(new CourseSyllabus(null, c2, "Phần 2: Listening & Reading Strategy", "Mẹo làm bài nhanh, nhận diện bẫy và chiến lược phân bổ thời gian hiệu quả trong phòng thi.", 2));
+                        changed = true;
+                    }
+                    if (changed) {
                         courseRepository.save(c2);
                     }
                 }
@@ -111,7 +131,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         course1.setPrice(BigDecimal.valueOf(12000000));
         course1.setDuration("3 tháng");
         course1.setLevel("Advanced");
-        course1.setThumbnail("https://images.unsplash.com/photo-1546410531-ea4cea477149?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+        course1.setThumbnail("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80");
         course1.setIsVisible(true);
         
         course1.getSyllabus().add(new CourseSyllabus(null, course1, "Chặng 1: IELTS Reading & Listening Foundation", "Xây dựng nền tảng từ vựng, ngữ pháp và phát âm cần thiết cho IELTS.", 1));

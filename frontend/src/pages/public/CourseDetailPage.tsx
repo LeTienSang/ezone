@@ -157,7 +157,7 @@ export const CourseDetailPage: React.FC = () => {
           </div>
           
           <div className="bg-white rounded-2xl p-1 shadow-2xl">
-            <img src={course.thumbnail ? (course.thumbnail.startsWith('http') ? course.thumbnail : course.thumbnail) : "https://images.unsplash.com/photo-1546410531-ea4cea477149?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} alt="Course Preview" className="w-full h-64 object-cover rounded-xl" />
+            <img src={course.thumbnail ? (course.thumbnail.startsWith('http') ? course.thumbnail : course.thumbnail) : "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80"} alt="Course Preview" className="w-full h-64 object-cover rounded-xl" />
             <div className="p-6 text-gray-900">
               <div className="text-3xl font-bold text-primary mb-6">{course.price ? `${course.price.toLocaleString('vi-VN')} VNĐ` : 'Miễn phí'}</div>
               <Button onClick={() => setShowModal(true)} className="w-full text-lg py-3 mb-4">Đăng ký học ngay</Button>

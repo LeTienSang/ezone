@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Download, Upload, Clock, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Download, Upload, Clock, Loader2, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { api } from '../../services/api';
 
@@ -22,6 +22,19 @@ interface Material {
   materialType: 'PDF' | 'VIDEO' | 'LINK' | 'DOC';
 }
 
+interface SubmissionResponse {
+  id: number;
+  studentId: number;
+  studentName: string;
+  assignmentId: number;
+  assignmentTitle: string;
+  content?: string;
+  fileUrl?: string;
+  submittedAt: string;
+  score?: number;
+  teacherFeedback?: string;
+}
+
 interface AssignmentResponse {
   id: number;
   title: string;
@@ -29,6 +42,7 @@ interface AssignmentResponse {
   dueDate: string;
   maxScore: number;
   submissionStatus: 'submitted' | 'pending';
+  submission?: SubmissionResponse | null;
 }
 
 export const AssignmentsPage: React.FC = () => {
@@ -48,6 +62,7 @@ export const AssignmentsPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState('');
   const [submitErrorMsg, setSubmitErrorMsg] = useState('');
+  const [cancelingId, setCancelingId] = useState<number | null>(null);
 
   // Fetch student classes on mount
   useEffect(() => {
@@ -162,6 +177,25 @@ export const AssignmentsPage: React.FC = () => {
       setSubmitErrorMsg(err.message || 'Có lỗi xảy ra khi nộp bài.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCancelSubmission = async (assignmentId: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy nộp bài tập này không? Bạn sẽ phải nộp lại từ đầu.')) {
+      return;
+    }
+    
+    setCancelingId(assignmentId);
+    try {
+      await api.delete(`/api/v1/assignments/${assignmentId}/submissions`);
+      
+      // Refresh assignments list
+      const aRes = await api.get<AssignmentResponse[]>(`/api/v1/classes/${selectedClassId}/assignments`);
+      setAssignments(aRes.data || []);
+    } catch (err: any) {
+      alert(err.message || 'Có lỗi xảy ra khi hủy nộp bài.');
+    } finally {
+      setCancelingId(null);
     }
   };
 
@@ -356,8 +390,77 @@ export const AssignmentsPage: React.FC = () => {
                           </Button>
                         )
                       ) : (
-                        <div className="bg-green-50 text-green-700 p-3 rounded-lg border border-green-100 text-xs font-medium flex items-center gap-2 justify-center">
-                          <CheckCircle size={16} /> Bạn đã hoàn thành bài tập này.
+                        <div className="mt-4 space-y-3">
+                          {/* Submission Details */}
+                          <div className="bg-gray-50 border border-border-color/60 rounded-lg p-4 space-y-3 text-left">
+                            <div className="text-xs text-text-body font-medium flex justify-between items-center border-b border-border-color/40 pb-2">
+                              <span>Nộp lúc: {assignment.submission && formatDueDate(assignment.submission.submittedAt)}</span>
+                              {assignment.submission?.score !== undefined && assignment.submission?.score !== null && (
+                                <span className="font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                  Điểm: {assignment.submission.score} / {assignment.maxScore}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {assignment.submission?.content && (
+                              <div>
+                                <span className="block text-[10px] font-bold text-text-main uppercase tracking-wider mb-1">Lời nhắn / Bài giải:</span>
+                                <div className="text-sm bg-white border border-border-color/40 p-2.5 rounded text-text-main whitespace-pre-wrap font-sans">
+                                  {assignment.submission.content}
+                                </div>
+                              </div>
+                            )}
+
+                            {assignment.submission?.fileUrl && (
+                              <div>
+                                <span className="block text-[10px] font-bold text-text-main uppercase tracking-wider mb-1">File đính kèm:</span>
+                                <a
+                                  href={getFileUrl(assignment.submission.fileUrl)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline bg-white border border-border-color/40 px-3 py-1.5 rounded"
+                                >
+                                  <Download size={14} /> Tải file bài nộp
+                                </a>
+                              </div>
+                            )}
+
+                            {assignment.submission?.teacherFeedback && (
+                              <div className="border-t border-dashed border-border-color pt-2">
+                                <span className="block text-[10px] font-bold text-yellow-700 uppercase tracking-wider mb-1">Nhận xét của giáo viên:</span>
+                                <p className="text-xs text-yellow-800 bg-yellow-50/50 p-2 rounded border border-yellow-100/60 italic">
+                                  "{assignment.submission.teacherFeedback}"
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            {assignment.submission?.score !== undefined && assignment.submission?.score !== null ? (
+                              <div className="bg-green-50 text-green-700 p-2.5 rounded-lg border border-green-100 text-xs font-medium flex items-center gap-2 justify-center w-full">
+                                <CheckCircle size={16} /> Bài tập đã được chấm điểm.
+                              </div>
+                            ) : new Date() > new Date(assignment.dueDate) ? (
+                              <div className="bg-amber-50 text-amber-700 p-2.5 rounded-lg border border-amber-100 text-xs font-medium flex items-center gap-2 justify-center w-full">
+                                <Clock size={16} /> Đã hết hạn nộp, không thể hủy nộp.
+                              </div>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full text-sm text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                onClick={() => handleCancelSubmission(assignment.id)}
+                                disabled={cancelingId === assignment.id}
+                              >
+                                {cancelingId === assignment.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : (
+                                  <Trash2 size={16} className="mr-2" />
+                                )}
+                                Hủy nộp bài
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

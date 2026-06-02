@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -64,10 +65,33 @@ public class AssignmentService {
             res.setMaxScore(a.getMaxScore());
 
             if (user.getRole() == User.Role.STUDENT) {
-                boolean submitted = submissionRepository.existsByAssignmentIdAndStudentId(a.getId(), user.getId());
-                res.setSubmissionStatus(submitted ? "submitted" : "pending");
+                Optional<Submission> optSub = submissionRepository.findByAssignmentIdAndStudentId(a.getId(), user.getId());
+                if (optSub.isPresent()) {
+                    res.setSubmissionStatus("submitted");
+                    Submission sub = optSub.get();
+                    SubmissionResponse subRes = new SubmissionResponse();
+                    subRes.setId(sub.getId());
+                    subRes.setStudentId(user.getId());
+                    subRes.setStudentName(user.getFullName());
+                    subRes.setAssignmentId(a.getId());
+                    subRes.setAssignmentTitle(a.getTitle());
+                    subRes.setContent(sub.getContent());
+                    subRes.setFileUrl(sub.getFileUrl());
+                    subRes.setSubmittedAt(sub.getSubmittedAt());
+
+                    Optional<Score> optScore = scoreRepository.findBySubmissionId(sub.getId());
+                    if (optScore.isPresent()) {
+                        subRes.setScore(optScore.get().getScore());
+                        subRes.setTeacherFeedback(optScore.get().getTeacherFeedback());
+                    }
+                    res.setSubmission(subRes);
+                } else {
+                    res.setSubmissionStatus("pending");
+                    res.setSubmission(null);
+                }
             } else {
                 res.setSubmissionStatus(null);
+                res.setSubmission(null);
             }
             responses.add(res);
         }
@@ -270,5 +294,46 @@ public class AssignmentService {
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         return "/uploads/" + subFolder + "/" + fileName;
+    }
+
+    @Transactional
+    public void deleteSubmission(Integer assignmentId, String username) {
+        log.info("User {} is deleting submission for assignment ID {}", username, assignmentId);
+        User student = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học viên"));
+
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bài tập không tồn tại"));
+
+        Submission submission = submissionRepository.findByAssignmentIdAndStudentId(assignmentId, student.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Bạn chưa nộp bài tập này"));
+
+        // Check if the due date has passed
+        if (LocalDateTime.now().isAfter(assignment.getDueDate())) {
+            log.warn("Cannot delete submission: past due date {} for assignment ID {}", assignment.getDueDate(), assignmentId);
+            throw new BadRequestException("Không thể hủy nộp bài vì đã quá hạn");
+        }
+
+        // Check if already graded
+        boolean graded = scoreRepository.findBySubmissionId(submission.getId()).isPresent();
+        if (graded) {
+            log.warn("Cannot delete submission: already graded for submission ID {}", submission.getId());
+            throw new BadRequestException("Không thể hủy nộp bài vì bài làm đã được chấm điểm");
+        }
+
+        // Delete associated file if it exists
+        String fileUrl = submission.getFileUrl();
+        if (fileUrl != null && fileUrl.startsWith("/uploads/")) {
+            try {
+                Path filePath = Paths.get(fileUrl.substring(1));
+                Files.deleteIfExists(filePath);
+                log.info("Deleted file: {}", filePath);
+            } catch (IOException e) {
+                log.error("Failed to delete file: {}", fileUrl, e);
+            }
+        }
+
+        submissionRepository.delete(submission);
+        log.info("Submission ID {} deleted successfully", submission.getId());
     }
 }

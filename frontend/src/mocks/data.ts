@@ -2,7 +2,7 @@ export const dummyCourses = [
   {
     id: 1,
     title: "IELTS Intensive - Chinh phục 7.5+",
-    image: "https://images.unsplash.com/photo-1546410531-ea4cea477149?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80",
     instructor: "Nguyễn Thị A",
     price: "4.500.000đ",
     duration: "3 tháng",

@@ -94,4 +94,15 @@ public class AssignmentController {
         List<SubmissionResponse> submissions = assignmentService.getAssignmentSubmissions(assignmentId, username);
         return ResponseEntity.ok(ApiResponse.success(submissions));
     }
+
+    @Operation(summary = "Cancel / Delete a student submission (Student only)")
+    @DeleteMapping("/assignments/{assignmentId}/submissions")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Void>> deleteSubmission(
+            @PathVariable("assignmentId") Integer assignmentId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("REST request to delete submission for assignment ID {} by student {}", assignmentId, username);
+        assignmentService.deleteSubmission(assignmentId, username);
+        return ResponseEntity.ok(ApiResponse.success(null, "Hủy nộp bài tập thành công"));
+    }
 }
