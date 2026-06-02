@@ -33,7 +33,7 @@ export const HomePage: React.FC = () => {
         const mapped = content.map((c: CourseCatalog) => ({
           id: c.id,
           title: c.courseName,
-          image: c.thumbnail ? (c.thumbnail.startsWith('http') ? c.thumbnail : c.thumbnail) : "https://images.unsplash.com/photo-1546410531-ea4cea477149?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          image: c.thumbnail ? (c.thumbnail.startsWith('http') ? c.thumbnail : c.thumbnail) : "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80",
           instructor: "Giảng viên Hệ thống",
           price: c.price ? `${c.price.toLocaleString('vi-VN')} VNĐ` : 'Miễn phí',
           duration: c.duration || '3 tháng',

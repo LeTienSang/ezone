@@ -667,6 +667,17 @@ export const TeacherClassDetailPage: React.FC = () => {
             <form onSubmit={handleUploadMaterial} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-text-main mb-1">Tên tài liệu *</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Ví dụ: Slide Lecture 1, Reading Syllabus..."
+                  value={materialTitle}
+                  onChange={(e) => setMaterialTitle(e.target.value)}
+                  className="w-full border border-border-color rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white text-text-main font-medium"
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-semibold text-text-main mb-1">Loại tài liệu</label>
                 <select 
                   value={materialType}
@@ -703,7 +714,7 @@ export const TeacherClassDetailPage: React.FC = () => {
                 <Button 
                   type="submit" 
                   variant="primary" 
-                  disabled={uploadingMaterial || !materialFile}
+                  disabled={uploadingMaterial || !materialFile || !materialTitle.trim()}
                 >
                   {uploadingMaterial ? <Loader2 size={16} className="animate-spin" /> : 'Tải lên'}
                 </Button>
