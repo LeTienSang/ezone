@@ -31,9 +31,9 @@ public class AnalyticsService {
     @Transactional(readOnly = true)
     public DashboardStatsResponse getDashboardStats() {
         long totalUsers = userRepository.count();
-        long totalCourses = courseCatalogRepository.count();
+        long totalCourses = courseCatalogRepository.countByIsVisibleTrue();
         BigDecimal totalRevenue = paymentRepository.sumAmountByStatus(Payment.Status.SUCCESS);
-        long activeClasses = classRepository.countByStatus(ClassStatus.ACTIVE);
+        long activeClasses = classRepository.countByStatus(ClassStatus.ACTIVE) + classRepository.countByStatus(ClassStatus.UPCOMING);
 
         return DashboardStatsResponse.builder()
                 .totalUsers(totalUsers)
