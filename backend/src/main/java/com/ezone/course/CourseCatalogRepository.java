@@ -10,4 +10,6 @@ public interface CourseCatalogRepository extends JpaRepository<CourseCatalog, In
     Page<CourseCatalog> findAllByIsVisibleTrue(Pageable pageable);
 
     long count();
+
+    long countByIsVisibleTrue();
 }
