@@ -46,7 +46,7 @@ public class AuthService {
             throw new BadRequestException("Tài khoản của bạn đã bị khóa");
         }
 
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+        if (user.getPassword() == null || !passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             log.warn("Login failed: Password mismatch for email {}", req.getEmail());
             throw new BadRequestException("Tài khoản hoặc mật khẩu không chính xác");
         }
