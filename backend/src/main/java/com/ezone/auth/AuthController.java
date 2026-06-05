@@ -29,6 +29,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(res, "Đăng nhập thành công"));
     }
 
+    @Operation(summary = "Login with Google OAuth2")
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> loginWithGoogle(@Valid @RequestBody GoogleLoginRequest req) {
+        log.info("REST request to login with Google");
+        AuthResponse res = authService.loginWithGoogle(req);
+        return ResponseEntity.ok(ApiResponse.success(res, "Đăng nhập bằng Google thành công"));
+    }
+
     @Operation(summary = "Register a new student account")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@Valid @RequestBody RegisterRequest req) {
