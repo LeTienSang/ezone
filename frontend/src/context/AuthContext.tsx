@@ -17,6 +17,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
+  loginWithGoogle: (idToken: string) => Promise<User>;
   register: (fullName: string, email: string, phone: string, password: string) => Promise<any>;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -80,6 +81,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async (idToken: string): Promise<User> => {
+    setLoading(true);
+    try {
+      const res = await api.post<{ token: string; userId: number; fullName: string; role: string }>('/api/v1/auth/google', {
+        idToken,
+      });
+      const { token: jwtToken } = res.data;
+
+      localStorage.setItem('token', jwtToken);
+      setToken(jwtToken);
+
+      // Fetch complete user profile for state
+      const profileRes = await api.get<User>('/api/v1/users/me');
+      const currentUser = profileRes.data;
+
+      setUser(currentUser);
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      return currentUser;
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const register = async (fullName: string, email: string, phone: string, password: string): Promise<any> => {
     setLoading(true);
     try {
@@ -121,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         loading,
         login,
+        loginWithGoogle,
         register,
         logout,
         updateUser,
