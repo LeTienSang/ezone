@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Users, BookOpen, DollarSign, Activity, TrendingUp, TrendingDown, BarChart3, LineChart, Loader2 } from 'lucide-react';
 import { analyticsService } from '../../services/analyticsService';
+import 'chart.js/auto';
+import { Bar, Line } from 'react-chartjs-2';
 
 export const AdminDashboardPage: React.FC = () => {
   const [stats, setStats] = useState({
@@ -29,9 +31,51 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
+  const fetchCharts = async () => {
+    try {
+      const usersSeries = await analyticsService.getNewUsersSeries(7);
+      // normalize values to numbers
+      setNewUsersSeries({
+        labels: usersSeries.labels || [],
+        values: (usersSeries.values || []).map((v: any) => Number(v || 0)),
+      });
+    } catch (e) {
+      console.error('Lỗi tải dữ liệu người dùng mới', e);
+      // fallback: use last 7 days with totalUsers distributed to last day
+      const labels = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return d.toISOString().slice(0, 10);
+      });
+      const values = labels.map((_, i) => (i === labels.length - 1 ? stats.totalUsers : 0));
+      setNewUsersSeries({ labels, values });
+    }
+    try {
+      const revSeries = await analyticsService.getMonthlyRevenueSeries(6);
+      setRevenueSeries({
+        labels: revSeries.labels || [],
+        values: (revSeries.values || []).map((v: any) => Number(v || 0)),
+      });
+    } catch (e) {
+      console.error('Lỗi tải dữ liệu doanh thu', e);
+      // fallback: last 6 months with totalRevenue in current month
+      const labels = Array.from({ length: 6 }).map((_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        return d.toISOString().slice(0, 7);
+      });
+      const values = labels.map((_, i) => (i === labels.length - 1 ? stats.totalRevenue : 0));
+      setRevenueSeries({ labels, values });
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchCharts();
   }, []);
+
+  const [newUsersSeries, setNewUsersSeries] = useState<{ labels: string[]; values: number[] } | null>(null);
+  const [revenueSeries, setRevenueSeries] = useState<{ labels: string[]; values: number[] } | null>(null);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -156,8 +200,31 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
           <div className="w-full h-72 bg-blue-50/30 rounded-xl border border-dashed border-blue-200 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNFMkU4RjAiLz48L3N2Zz4=')] opacity-30"></div>
-            <BarChart3 size={48} className="text-blue-300 mb-3 z-10" strokeWidth={1.5} />
-            <span className="text-blue-500 font-medium z-10">Đang đồng bộ dữ liệu biểu đồ...</span>
+            {newUsersSeries ? (
+              <div className="w-full h-72">
+                <Bar
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                  }}
+                  data={{
+                    labels: newUsersSeries.labels,
+                    datasets: [
+                      {
+                        label: 'Người dùng mới',
+                        data: newUsersSeries.values,
+                        backgroundColor: 'rgba(59,130,246,0.8)'
+                      }
+                    ]
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                <BarChart3 size={48} className="text-blue-300 mb-3 z-10" strokeWidth={1.5} />
+                <span className="text-blue-500 font-medium z-10">Đang đồng bộ dữ liệu biểu đồ...</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -168,8 +235,32 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
           <div className="w-full h-72 bg-emerald-50/30 rounded-xl border border-dashed border-emerald-200 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNFMkU4RjAiLz48L3N2Zz4=')] opacity-30"></div>
-            <LineChart size={48} className="text-emerald-300 mb-3 z-10" strokeWidth={1.5} />
-            <span className="text-emerald-500 font-medium z-10">Đang tính toán dòng tiền...</span>
+            {revenueSeries ? (
+              <div className="w-full h-72">
+                <Line
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                  }}
+                  data={{
+                    labels: revenueSeries.labels,
+                    datasets: [
+                      {
+                        label: 'Doanh thu',
+                        data: revenueSeries.values,
+                        borderColor: 'rgba(16,185,129,0.9)',
+                        backgroundColor: 'rgba(16,185,129,0.2)'
+                      }
+                    ]
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                <LineChart size={48} className="text-emerald-300 mb-3 z-10" strokeWidth={1.5} />
+                <span className="text-emerald-500 font-medium z-10">Đang tính toán dòng tiền...</span>
+              </>
+            )}
           </div>
         </div>
       </div>
