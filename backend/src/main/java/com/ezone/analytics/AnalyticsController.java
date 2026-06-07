@@ -29,4 +29,20 @@ public class AnalyticsController {
         DashboardStatsResponse stats = analyticsService.getDashboardStats();
         return ResponseEntity.ok(ApiResponse.success(stats, "Tải thống kê dashboard thành công"));
     }
+
+    @Operation(summary = "Get new users time-series (last N days)")
+    @GetMapping("/new-users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<TimeSeriesResponse>> getNewUsersSeries(@org.springframework.web.bind.annotation.RequestParam(defaultValue = "7") int days) {
+        TimeSeriesResponse res = analyticsService.getNewUsersSeries(days);
+        return ResponseEntity.ok(ApiResponse.success(res, "Tải dữ liệu người dùng mới thành công"));
+    }
+
+    @Operation(summary = "Get monthly revenue time-series (last N months)")
+    @GetMapping("/revenue-monthly")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<TimeSeriesResponse>> getMonthlyRevenueSeries(@org.springframework.web.bind.annotation.RequestParam(defaultValue = "6") int months) {
+        TimeSeriesResponse res = analyticsService.getMonthlyRevenueSeries(months);
+        return ResponseEntity.ok(ApiResponse.success(res, "Tải dữ liệu doanh thu theo tháng thành công"));
+    }
 }
