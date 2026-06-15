@@ -1,7 +1,6 @@
 # PRD.md — Product Requirements Document
 
-> **Nguồn gốc:** Toàn bộ nội dung file này được tổng hợp trực tiếp từ báo cáo "Xây dựng hệ thống quản lý khóa học và đào tạo trực tuyến" — Học viện Công nghệ Bưu chính Viễn thông, Nhóm 10, Tháng 4/2026.
-> AI agent dùng file này để sinh UI copy, viết test case và đánh giá tính đúng đắn của tính năng.
+> **Nguồn gốc:** Toàn bộ nội dung file này được tổng hợp trực tiếp từ báo cáo 
 
 ---
 
