@@ -1,7 +1,8 @@
-# Dependency directories
+# Dependencies
 node_modules/
 jspm_packages/
 .npm/
+.pnpm-store/
 
 # Build outputs
 dist/
@@ -9,8 +10,10 @@ build/
 .cache/
 dist-ssr/
 target/
+coverage/
+frontend/.vite/
 
-# Environment variables (Cực kỳ quan trọng: Không push mật khẩu/key lên Git)
+# Environment variables (không push mật khẩu/key)
 .env
 .env.local
 .env.development.local
@@ -26,7 +29,11 @@ pnpm-debug.log*
 logs/
 *.log
 
-# Editor-specific
+# Backend compile/debug artifacts
+backend/compile_out*.txt
+backend/compiler_log*.txt
+
+# Editor / OS
 .vscode/
 .idea/
 *.suo
@@ -37,12 +44,12 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Database specific
+# Database artifacts
 *.bak
 *.mdf
 *.ldf
 
-# Frontend specific (Vite, Next.js, etc.)
+# Frontend artifacts
 .eslintcache
 *.tsbuildinfo
 
